@@ -1,0 +1,1015 @@
+This appendix shows you how to write functions that return answers in the compact format that is favored by Julia's built-in functions. In ROB 101, it is NOT necessary to use a ``structured return''. You can continue building your functions as we have done in the Labs, HWs, and Projects. However, if you want to get a bit fancier, you can learn how to add that ``je ne sais pas'' to your coding repertoire.\\
+
+First we illustrate what we mean by ``structured return'' by using a standard Julia function. \\
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+using LinearAlgebra
+A = [2 2 3; 4 5 6; 7 8 9]
+F = lu(A)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+LU{Float64, Matrix{Float64}}
+L factor:
+3×3 Matrix{Float64}:
+ 1.0        0.0       0.0
+ 0.571429   1.0       0.0
+ 0.285714  -0.666667  1.0
+U factor:
+3×3 Matrix{Float64}:
+ 7.0  8.0       9.0
+ 0.0  0.428571  0.857143
+ 0.0  0.0       1.0
+\end{verbatim}
+
+Note that the permutation matrix $P$ was not printed! Is it because $P=I_{3 \times 3}$? Let's check!
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+F.P
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×3 Matrix{Float64}:
+ 0.0  0.0  1.0
+ 0.0  1.0  0.0
+ 1.0  0.0  0.0
+\end{verbatim}
+
+Nope! Rows three and one are swapped. It is not because $P = I_{3 \times 3}$.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+F.L
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×3 Matrix{Float64}:
+ 1.0        0.0       0.0
+ 0.571429   1.0       0.0
+ 0.285714  -0.666667  1.0
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+F.U
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×3 Matrix{Float64}:
+ 7.0  8.0       9.0
+ 0.0  0.428571  0.857143
+ 0.0  0.0       1.0
+\end{verbatim}
+
+
+
+\section{Building a Structured Return of Your Own}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# First, build a structure
+struct luStructReturn
+    # List the variables to be used in the return statement
+    # of the function
+    L
+    U
+    P
+end
+#
+# Then use it in the function when you define the return in line 47
+#
+using LinearAlgebra
+#
+function myLU(M::Array{<:Number, 2},aTol=1e-12)
+#  Works for rectangular matrices  
+    n, m = size(M)
+    k=min(n,m)
+    Areduced = deepcopy(M)
+    L = Array{Float64,2}(undef, n, 0)
+    U = Array{Float64,2}(undef, 0, m)
+    P=zeros(n,n) + I     
+    for i = 1:k
+        C = Areduced[:,i] # k-th column
+        R = Areduced[i:i,:] # k-th row
+        if maximum(abs.(C)) <= aTol #column of zeros
+            C=0.0*C; C[i]=1.0;
+            U=[U;R];  
+            L=[L C];
+            Areduced=Areduced.-C*R;
+        else # put the biggest entry to the top  
+            ii=argmax( abs.(C) );
+            nrow=ii[1] 
+            P[[i,nrow],:]=P[[nrow,i],:];
+            Areduced[[i,nrow],:]=Areduced[[nrow,i],:];
+            if i>1
+                L[[i,nrow],:]= L[[nrow,i],:];
+            end
+            C = Areduced[:,i] # k-th column
+            R = Areduced[i:i,:] # k-th row
+            pivot = C[i];
+            C=C/pivot #normalize all entires by C[i]
+            U=[U;R]; 
+            L=[L C];
+            Areduced=Areduced-C*R;
+        end
+    end
+    F = luStructReturn(L,U,P)
+    return F
+end
+
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+myLU (generic function with 2 methods)
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = [2 2 3; 4 5 6; 7 8 9]
+F = myLU(A)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+luStructReturn([1.0 0.0 0.0; 0.5714285714285714 1.0 0.0; 0.2857142857142857
+-0.666666666666666 1.0], [7.0 8.0 9.0; 0.0 0.4285714285714288
+0.8571428571428577; 0.0 0.0 1.0], [0.0 0.0 1.0; 0.0 1.0 0.0; 1.0 0.0 0.0])
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+F.L
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×3 Matrix{Float64}:
+ 1.0        0.0       0.0
+ 0.571429   1.0       0.0
+ 0.285714  -0.666667  1.0
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+F.U
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×3 Matrix{Float64}:
+ 7.0  8.0       9.0
+ 0.0  0.428571  0.857143
+ 0.0  0.0       1.0
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+F.P
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×3 Matrix{Float64}:
+ 0.0  0.0  1.0
+ 0.0  1.0  0.0
+ 1.0  0.0  0.0
+\end{verbatim}
+
+\begin{tcolorbox}[
+title=\textcolor{red}{\Large \bf Heads Up!}]
+Suppose you want to modify your structured return to include the row swapping indices that define the permutation matrix, $P$. You have two choices:
+\begin{itemize}
+    \item use a new name for the structure, or
+    \item stop your kernel and clear outputs. 
+\end{itemize}
+Otherwise, you will receive an error message as follows
+\begin{verbatim}
+invalid redefinition of constant luStructReturn
+
+Stacktrace:
+ [1] top-level scope
+   @ In[11]:2
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module,
+ code::String, filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+\end{tcolorbox}
+
+In the following we
+\begin{itemize}
+\item stopped our kernel and cleared the outputs;
+    \item redefined the structured return to include the indices, $p$; and
+    \item changed a few lines of code; see 8, 22, 34, 49, and 50.
+\end{itemize}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# First, build the structure
+struct luStructReturn
+    # List the variables to be used in the return statement
+    # of the function
+    L
+    U
+    P
+    p
+end
+#
+# Then use it in the function when you define the return
+#
+using LinearAlgebra
+#
+function myLU(M::Array{<:Number, 2},aTol=1e-12)
+#  Works for rectangular matrices  
+    n, m = size(M)
+    k=min(n,m)
+    Areduced = deepcopy(M)
+    L = Array{Float64,2}(undef, n, 0)
+    U = Array{Float64,2}(undef, 0, m)
+    p=collect(1:n)     
+    for i = 1:k
+        C = Areduced[:,i] # k-th column
+        R = Areduced[i:i,:] # k-th row
+        if maximum(abs.(C)) <= aTol #column of zeros
+            C=0.0*C; C[i]=1.0;
+            U=[U;R];  
+            L=[L C];
+            Areduced=Areduced.-C*R;
+        else # put the biggest entry to the top  
+            ii=argmax( abs.(C) );
+            nrow=ii[1] 
+            p[[i,nrow]]=p[[nrow,i]];
+            Areduced[[i,nrow],:]=Areduced[[nrow,i],:];
+            if i>1
+                L[[i,nrow],:]= L[[nrow,i],:];
+            end
+            C = Areduced[:,i] # k-th column
+            R = Areduced[i:i,:] # k-th row
+            pivot = C[i];
+            C=C/pivot #normalize all entires by C[i]
+            U=[U;R]; 
+            L=[L C];
+            Areduced=Areduced-C*R;
+        end
+    end
+    myI = zeros(n,n)+I
+    P=myI[p,:]
+    F = luStructReturn(L,U,P,p)
+    return F
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+myLU (generic function with 2 methods)
+\end{verbatim}
+
+We first repeat the previous example and see that $F.p=[3, 2, 1]$.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = [2 2 3; 4 5 6; 7 8 9]
+F = myLU(A)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+luStructReturn([1.0 0.0 0.0; 0.5714285714285714 1.0 0.0; 0.2857142857142857
+-0.666666666666666 1.0], [7.0 8.0 9.0; 0.0 0.4285714285714288
+0.8571428571428577; 0.0 0.0 1.0], [0.0 0.0 1.0; 0.0 1.0 0.0; 1.0 0.0 0.0],
+[3, 2, 1])
+\end{verbatim}
+
+Then we do a huge example where being able to look at the indices, $F.p$, is easier than looking at the permutation matrix itself, $F.P$.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+using Random
+A=randn(100,70)
+F=myLU(A)
+@show norm(F.P*A-F.L*F.U)
+F.p
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+norm(F.P * A - F.L * F.U) = 5.482649156726496e-14
+
+100-element Vector{Int64}:
+  8
+  3
+ 52
+ 51
+ 37
+ 88
+ 26
+ 18
+ 49
+ 55
+ 10
+ 76
+ 61
+  .
+  .
+  .
+ 11
+ 25
+ 63
+ 54
+ 93
+ 69
+ 95
+ 41
+ 20
+ 98
+ 66
+ 45
+\end{verbatim}
+
+\section{Your First Named Tuple, an Alternative to Structured Returns}
+
+\begin{tcolorbox}[
+title=\textcolor{red}{\Large \bf Alternative Method to Build a Structured Return via a Named Tuple}]
+
+\begin{itemize}
+    \item build your function as before, and then 
+    \item modify the return statement as follows 
+\begin{lstlisting}[language=Julia,style=mystyle]
+    # Now we build the structure
+    F = (L=L,U=U,p=p,P=myI[p,:])
+    return F
+\end{lstlisting}
+The above is called a ``named tuple''.
+\item To be clear, \textbf{you skip the step}
+\begin{lstlisting}[language=Julia,style=mystyle]
+# First, build the structure
+struct luStructReturn
+    # List the variables to be used in the return statement
+    # of the function
+    L
+    U
+    P
+    p
+end
+\end{lstlisting}
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Check out line \#40 below}.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Start your function as before
+using LinearAlgebra
+#
+function myLU(M::Array{<:Number, 2},aTol=1e-12)
+#  Works for rectangular matrices  
+    n, m = size(M)
+    k=min(n,m)
+    Areduced = deepcopy(M)
+    L = Array{Float64,2}(undef, n, 0)
+    U = Array{Float64,2}(undef, 0, m)
+    p=collect(1:n)     
+    for i = 1:k
+        C = Areduced[:,i] # k-th column
+        R = Areduced[i:i,:] # k-th row
+        if maximum(abs.(C)) <= aTol #column of zeros
+            C=0.0*C; C[i]=1.0;
+            U=[U;R];  
+            L=[L C];
+            Areduced=Areduced.-C*R;
+        else # put the biggest entry to the top  
+            ii=argmax( abs.(C) );
+            nrow=ii[1] 
+            p[[i,nrow]]=p[[nrow,i]];
+            Areduced[[i,nrow],:]=Areduced[[nrow,i],:];
+            if i>1
+                L[[i,nrow],:]= L[[nrow,i],:];
+            end
+            C = Areduced[:,i] # k-th column
+            R = Areduced[i:i,:] # k-th row
+            pivot = C[i];
+            C=C/pivot #normalize all entires by C[i]
+            U=[U;R]; 
+            L=[L C];
+            Areduced=Areduced-C*R;
+        end
+    end
+    myI = zeros(n,n)+I
+    P=myI[p,:]
+    # Now we build the structure
+    F = (L=L,U=U,p=p,P=myI[p,:])
+    return F
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+myLU (generic function with 2 methods)
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+using Random
+A=randn(20,13)
+F=myLU(A)
+@show norm(F.P*A-F.L*F.U)
+F.p
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+norm(F.P * A - F.L * F.U) = 3.090121509299927e-15
+
+20-element Vector{Int64}:
+  8
+  4
+  2
+ 10
+  7
+ 17
+ 11
+ 19
+ 14
+ 12
+ 18
+  1
+ 13
+  9
+ 15
+ 16
+  6
+  5
+  3
+ 20
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+F
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(L = [1.0 -0.0 … 0.0 -0.0; 0.2592134812359471 1.0 … 0.0 -0.0; … ; -0.704296668486134 -0.011650553311418845 … 0.698769089898198 0.7658109144351539; 0.017861627257789486 0.4287972223485453 … 0.1941140899317409 -0.19326359666771908], U = [-1.8260925655441076 0.5791501235532478 … 0.4932420099150497 -0.5599493363829814; 0.0 -2.6564834565572952 … -0.7925703023450414 0.8688637141207752; … ; 0.0 -5.795161686936636e-17 … 2.515380708071959 0.8004064587012474; 0.0 2.445820904052053e-16 … 0.0 -2.4862928420239956], p = [7, 11, 17, 13, 8, 4, 20, 14, 19, 12, 2, 6, 5, 10, 15, 16, 3, 18, 9, 1], P = [0.0 0.0 … 0.0 0.0; 0.0 0.0 … 0.0 0.0; … ; 0.0 0.0 … 0.0 0.0; 1.0 0.0 … 0.0 0.0])
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# You can also call the function as follows
+(L,U,p,P)=myLU(A)
+p
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+20-element Vector{Int64}:
+  7
+ 11
+ 17
+ 13
+  8
+  4
+ 20
+ 14
+ 19
+ 12
+  2
+  6
+  5
+ 10
+ 15
+ 16
+  3
+ 18
+  9
+  1
+\end{verbatim}
+
+
+\begin{exercise}
+Build your own function called build\_a\_named\_tuple which takes in 3 variables, and returns them in a named tuple with names "VarOne", "VarTwo", and "VarThree"
+\end{exercise}
+
+\textbf{Solution}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+function build_a_named_tuple(one, two, three)
+    return (VarOne=one, VarTwo=two, VarThree=three)
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+build_a_named_tuple (generic function with 1 method)
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+#autograder cell
+
+F = build_a_named_tuple("temp",2,pi)
+T1 = (@assert F.VarOne == "temp")
+T2 = (@assert F.VarTwo == 2)
+T3 = (@assert F.VarThree == pi)
+[T1 T2 T3]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1×3 Matrix{Nothing}:
+ nothing  nothing  nothing
+\end{verbatim}
+
+\Qed
+
+You have total freedom in how you name the variables. Here we use $X$, $Y$, $z$, and $Z$ instead of $L$, $U$, $p$, and $P$. Why? Just because we can.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Start your function as before
+using LinearAlgebra
+#
+function myLU(M::Array{<:Number, 2},aTol=1e-12)
+#  Works for rectangular matrices  
+    n, m = size(M)
+    k=min(n,m)
+    Areduced = deepcopy(M)
+    L = Array{Float64,2}(undef, n, 0)
+    U = Array{Float64,2}(undef, 0, m)
+    p=collect(1:n)     
+    for i = 1:k
+        C = Areduced[:,i] # k-th column
+        R = Areduced[i:i,:] # k-th row
+        if maximum(abs.(C)) <= aTol #column of zeros
+            C=0.0*C; C[i]=1.0;
+            U=[U;R];  
+            L=[L C];
+            Areduced=Areduced.-C*R;
+        else # put the biggest entry to the top  
+            ii=argmax( abs.(C) );
+            nrow=ii[1] 
+            p[[i,nrow]]=p[[nrow,i]];
+            Areduced[[i,nrow],:]=Areduced[[nrow,i],:];
+            if i>1
+                L[[i,nrow],:]= L[[nrow,i],:];
+            end
+            C = Areduced[:,i] # k-th column
+            R = Areduced[i:i,:] # k-th row
+            pivot = C[i];
+            C=C/pivot #normalize all entires by C[i]
+            U=[U;R]; 
+            L=[L C];
+            Areduced=Areduced-C*R;
+        end
+    end
+    myI = zeros(n,n)+I
+    P=myI[p,:]
+    # Now we build the structure
+    F = (X=L,Y=U,z=p,Z=myI[p,:])
+    return F
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+myLU (generic function with 2 methods)
+\end{verbatim}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Note that the variable names are set by X=, Y=, z=,  Z=
+F=myLU(A)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(X = [1.0 -0.0 … 0.0 -0.0; 0.2592134812359471 1.0 … 0.0 -0.0; ... ;
+-0.704296668486134 -0.011650553311418845 … 0.698769089898198
+0.7658109144351539; 0.017861627257789486 0.4287972223485453 ...
+0.1941140899317409 -0.19326359666771908], Y = [-1.8260925655441076
+0.5791501235532478 ... 0.4932420099150497 -0.5599493363829814; 0.0
+-2.6564834565572952 ... 0.7925703023450414 0.8688637141207752; ... ; 0.0
+-5.795161686936636e-17 ... 2.515380708071959 0.8004064587012474; 0.0
+2.445820904052053e-16 ... 0.0 -2.4862928420239956], z = [7, 11, 17, 13, 8, 4,
+20, 14, 19, 12, 2, 6, 5, 10, 15, 16, 3, 18, 9, 1], Z = [0.0 0.0 ... 0.0 0.0; 
+0.0 0.0 … 0.0 0.0; ... ; 0.0 0.0 … 0.0 0.0; 1.0 0.0 ... 0.0 0.0])
+\end{verbatim}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Note that the variable names are set by X=, Y=, z=, Z= 
+F.z
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+20-element Vector{Int64}:
+  7
+ 11
+ 17
+ 13
+  8
+  4
+ 20
+ 14
+ 19
+ 12
+  2
+  6
+  5
+ 10
+ 15
+ 16
+  3
+ 18
+  9
+  1
+\end{verbatim}
+
+
+
+
+\begin{tcolorbox}[sharp corners, colback=green!30, colframe=green!80!blue,
+title=\textbf{\Large Should I Use Structured Returns or Named Tuples?}]
+
+As with most things in programming, there are many ways to accomplish the same goal. You may, if you wish, simply return a bunch of values as we did before\\
+\begin{center}
+    \texttt{return\, L,U,P,p}
+\end{center}
+However, that can get messy, and if you forget the order of the values your function returns, your subsequent computations may be garbage. If you want to make a copy of the data and pass it to another function, such as one that solves a linear system of equations using forward substitution and back substitution, it can be simpler to just pass one variable, the structure. This is where \texttt{structs} come in handy. Hence, use them if you think they can help you, or if you just like the extra organization. 
+\end{tcolorbox}
+
+
+\section{Tools to Solve Linear Equations}
+
+If you made it this deeply into the Lab Manual, you deserve to find something awesome. Here, we give you a means to solve all of the cases of $Ax=b$ that we have encountered in ROB 101.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+#
+function myLU(M::Array{<:Number, 2},aTol=1e-12)
+#  Works for rectangular matrices  
+    n, m = size(M)
+    k=min(n,m)
+    Areduced = deepcopy(M)
+    L = Array{Float64,2}(undef, n, 0)
+    U = Array{Float64,2}(undef, 0, m)
+    p=collect(1:n)     
+    for i = 1:k
+        C = Areduced[:,i] # k-th column
+        R = Areduced[i:i,:] # k-th row
+        if maximum(abs.(C)) <= aTol #column of zeros
+            C=0.0*C; C[i]=1.0;
+            U=[U;R];  
+            L=[L C];
+            Areduced=Areduced.-C*R;
+        else # put the biggest entry to the top  
+            ii=argmax( abs.(C) );
+            nrow=ii[1] 
+            p[[i,nrow]]=p[[nrow,i]];
+            Areduced[[i,nrow],:]=Areduced[[nrow,i],:];
+            if i>1
+                L[[i,nrow],:]= L[[nrow,i],:];
+            end
+            C = Areduced[:,i] # k-th column
+            R = Areduced[i:i,:] # k-th row
+            pivot = C[i];
+            C=C/pivot #normalize all entires by C[i]
+            U=[U;R]; 
+            L=[L C];
+            Areduced=Areduced-C*R;
+        end
+    end
+    myI = zeros(n,n)+I
+    P=myI[p,:]
+    # Now we build the structure
+    F = (L=L,U=U,p=p,P=P)
+    return F
+end
+
+# LDLT named tuple
+function myLDLT(A, aTol=1e-12)
+    M = A'*A
+    n,m = size(A)
+    Areduced = M
+    L = Array{Float64,2}(undef,m,0)
+    Id = zeros(m,m) + I
+    p=collect(1:m)    
+    D=zeros(m,m)
+    for i=1:m
+        ii=argmax(diag(Areduced[i:m,i:m]))
+        mrow=ii[1]+(i-1)
+        if !(i==mrow)
+            p[[i,mrow]]=p[[mrow,i]]
+            Areduced[[i,mrow],:]=Areduced[[mrow,i],:]
+            Areduced[:,[i,mrow]]=Areduced[:,[mrow,i]]
+        end
+        if (i>1)
+            L[[i,mrow],:] = L[[mrow,i],:]
+        end
+        pivot=Areduced[i,i]
+        if !isapprox(pivot,0,atol=aTol)
+            D[i,i]=pivot
+            C=Areduced[:,i]/pivot
+            L=[L C]
+            Areduced=Areduced-(C*pivot*C')
+        else
+            L=[L Id[:,i:m]]
+            break
+        end
+    end
+    diagD=diag(D)
+    P=Id[p,:]
+    return (L=L,P=P,D=D,diagD=diagD,p=p)
+end
+
+# This is a back substitution function.  It solves for x in an equation Ux = b, 
+# where U is upper triangular. The function assumes U and b are the correct 
+# sizes. You can add error checking, if you wish.
+function backwardsub(U, b)
+    # Check if U is non-signular
+    min_diagU = minimum(abs.(diag(U)))
+    if min_diagU <  1E-10
+        return false
+    end
+    n = length(b)
+    x = Vector{Float64}(undef, n) 
+    x[n] = b[n]/U[n,n]
+    for i in n-1:-1:1
+        x[i]=(b[i]- (U[i,(i+1):n])' *x[(i+1):n] )./U[i,i]
+    end
+    return x
+end
+
+# This is a forward substitution function. It solves for x in an equation Lx = b, 
+# where L is lower triangular. # The function assumes L and b are the correct 
+# sizes. You can add error checking, if you wish.
+function forwardsub(L, b)
+     # Check if L is non-signular
+    min_diagL = minimum(abs.(diag(L)))
+    if min_diagL <  1E-10
+        return false
+    end
+    n = length(b)
+    x = Vector{Float64}(undef, n); 
+    x[1] = b[1]/L[1,1] 
+    for i = 2:n 
+        x[i]=(b[i]- (L[i,1:i-1])' *x[1:i-1] )./L[i,i] 
+    end
+    return x
+end
+
+function num_independent_vectors(A,aTol=1e-10)
+    F = myLDLT(A)
+    indicesBigEnough=findall(x->x>aTol, abs.(F.diagD))  
+    return length(indicesBigEnough)   
+end
+
+function grahm_schmidt(U,aTol=1e-8)
+    # Allows columns of U to be dependent
+    nRowsU = size(U,1) # the 1 returns the number of rows
+    nColsU = size(U,2) # the 2 returns number of columns. 
+    #
+    # We create an empty matrix V that will hold all of the orthonormal vectors
+    V = Array{Float64,2}(undef, nRowsU, 0)
+    #
+    #start a for loop that runs the number of times that there are columns in U
+    for k in 1:nColsU
+        uk = U[:, k] 
+        # next we set up for the general step of the G-S process
+        vk = copy(uk)
+        for i = 1:size(V,2) # loop over the number of columns of V
+            vi = V[:,i]
+            vk = vk - ( dot(uk, vi)/dot(vi, vi) )*vi
+        end
+        #
+        if norm(vk) > aTol       # Trick? Not really. We only add a normalized vk 
+           V = [V vk/norm(vk)]   # if vk is not approximately the zero vector. Make sense?
+        end                      # And we ignore the vector otherwise
+    end
+    #
+    rankU = size(V,2)
+    return (Q=V, r=rankU)
+end
+
+function myQR(A)
+    nRowsA, nColsA = size(A)
+    GS = grahm_schmidt(A)
+    Q = GS.Q
+    R = Q'*A
+    Flag = ( nColsA == size(Q,2) ) # Is A full column rank?
+    F = (Q=Q, R=R, Flag=Flag)
+    return F
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+myQR (generic function with 1 method)
+\end{verbatim}
+
+\vspace*{.2cm}
+\begin{center}
+    \fbox{\bf \Large The magical super solver for $Ax=b$!}
+\end{center}
+\vspace*{.2cm}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+function mySolve(A, b, myMethod = "LU")
+    nRowsA, nColsA = size(A)
+    dim1 = num_independent_vectors(A)
+    if ( (nRowsA == nColsA) & (dim1 == nColsA) ) # A is square and invertible
+        if myMethod == "LU"
+            F = myLU(A)
+            y = forwardsub(F.L, F.P*b)
+            x = backwardsub(F.U, y)
+        else #  Assume QR is ok!
+            F = myQR(A)   
+            x = backwardsub(F.R, (F.Q)' * b)  
+        end
+        Flag = "A is square invertible"
+    elseif (dim1 == nColsA) # A has linear indep columns, but is not square 
+        # Regression style solution
+        M = A'*A
+        b = A'*b
+        F = myQR(M)   
+        x = backwardsub(F.R, (F.Q)' * b)
+        Flag = "A has indep columns, not square"
+    elseif (dim1 == nRowsA)   # A has linear indep rows, but is not square  
+        # x of min norm statisfying the equation
+        F = myQR(A')   
+        beta = forwardsub(F.R', b) 
+        x = F.Q*beta
+        Flag = "A has indep rows, not square"
+    else # dependent rows and columns
+        # Ax=b <=> QR x = b => R x = Q'*b <=> x = R'*z and R*R' z = Q'*b
+        G = myQR(A); R = G.R; Q = G.Q
+        F = mySolve(R*R', Q'*b)  # function calls itself!
+        z=F.x 
+        x = (R')*z
+        if (num_independent_vectors([A b]) == dim1)
+             Flag = "b in column span of A, neither columns nor rows of A indep"
+        else
+             Flag = "b not in column span of A, neither columns nor rows of A indep"
+        end
+    end
+    return (x=x, Flag = Flag)   
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+mySolve (generic function with 2 methods)
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = randn(5,5)
+b = randn(5,1)
+F = mySolve(A, b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(x = [-0.25142805928052786, 0.0026859440179519173, 0.9036926694667949,
+-0.22222812261095745, 0.7299120656135045], 
+Flag = "A is square invertible")
+\end{verbatim}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+norm(A*F.x-b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2.7230185981536845e-16
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = randn(5,5)
+b = randn(5,1)
+F = mySolve(A, b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(x = [-0.7170921127391888, 1.7999232745022158, 0.016231490871714712, 
+-0.6053674054406761, -0.12624083607954703], 
+Flag = "A has indep columns, not square")
+\end{verbatim}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+norm(A*F.x-b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+8.524389570411963e-13
+\end{verbatim}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = randn(6,5)
+b = randn(6,1)
+F = mySolve(A, b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+norm(A'*A*F.x-A'*b)
+\end{verbatim}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = randn(3,5)
+b = randn(3,1)
+F = mySolve(A, b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(x = [0.10287772187194529, 0.10648005509200273, -0.31426106675440746, 
+0.2114509321783164,0.43636854425759064], 
+Flag = "A has indep rows, not square")
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+norm(A*F.x-b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1.1102230246251565e-16
+\end{verbatim}
+
+Our final cases are the ``trickiest'', $Ax = b$ when both the rows and columns of $A$ are linearly dependent. If $b \in \colspanof{A}$, there then does exist a solution. Because the columns of $A$ are dependent, that solution would not be unique. Can we still find a solution of minimum norm? And what if $b \not \in \colspanof{A}$?
+
+\begin{tcolorbox}[title=\textbf{\Large Solving $Ax=b$ when neither Rows nor Columns of A are Linearly Independent}]
+
+Consider $Ax=b$ where $A$ is $n \times m$. We assume, that the rows and columns of $A$ are both linearly dependent and hence our normal means of finding a solution do not apply. What do we do?\\
+
+We can still use our version of the Gram-Schmidt Algorithm that works for linearly dependent vectors to perform a QR Factorization, namely, $A=Q \cdot R$, where $Q$ is an orthonormal matrix, meaning $Q^\top \cdot Q = I$. Then $Q$ is $n \times k$, where $k < \min(n, m)$, and $R$ is then $k \times m$. Hence, we have
+\begin{align*}
+    ||Ax-b||^2 & = ||Q \cdot R x - b||^2 \\
+    &= (x^\top R^\top \cdot Q^\top -b^\top) (Q \cdot R x - b ) \\
+    &= x^\top R ^\top \cdot Q^\top \cdot Q \cdot R x - 2 x^\top R^\top \cdot Q^\top b + b^\top b\\
+    &= x^\top R ^\top \cdot I_{k} \cdot R x - 2 x^\top R^\top \cdot Q^\top b + b^\top b\\
+    & = b^\top b - \overline{b}^\top \overline{b} + (x^\top R^\top -\overline{b}) (R x - \overline{b} ) \\
+    & = \left( b^\top b - \overline{b}^\top \overline{b} \right) + ||Rx - \overline{b}||^2
+\end{align*}
+where $\overline{b} = Q^\top b$, the orthogonal projection of $b$ onto the column span of $A$.
+% \begin{align*}
+%     A x & = b \\
+%     & \Updownarrow \\
+%     QR x & = b \\
+%     & \Updownarrow \\
+%     R x & = (Q^\top) b. 
+% \end{align*}
+Because $k$ is the rank of $A$, it follows from Chapter~ 10.5 of our textbook that the rows of $R$ are linearly independent. Because the rows of $R$ are linearly independent, $ R x = (Q^\top) b$ is an underdetermined equation and we can apply known results for its solution, namely
+$$ x^* = \argmin_{R x = Q^\top b} ||x||^2 \iff (R \cdot R^\top z = Q^\top b \text{ and } x^* = R^\top z),$$
+where $R \cdot R^\top$ is square and invertible. We solve the right-hand side of the above equation using the first case covered by our function \texttt{mySolve(A, b)}. It's quite cool that we can complete a function by making a call to itself!\\
+
+We note that once we choose $x$ such that $Rx - \overline{b} = Rx - Q^\top b = 0$, then $$||Ax-b||^2 = 0 \iff  \left( b^\top b - \overline{b}^\top \overline{b} \right) = 0.$$
+In other words, $b$ is in the column span of $A$ if, and only if, $\left( b^\top b - \overline{b}^\top \overline{b} \right) = 0$.\\
+
+Next we test all of this out.
+
+\end{tcolorbox}
+
+We first test the case that $b \in \colspanof{A}$.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = randn(5,4)
+b = A[:,3]+A[:,1]+pi*A[:,2] # linear combo of columns of A
+A=[A[:,1:3] A[:,2]] # make columns of A dependent
+F = mySolve(A, b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(x = [1.0, 1.5707963267948961, 0.9999999999999997, 1.5707963267948961], 
+Flag = "b in column span of A, neither columns nor rows of A indep")
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+norm(A*F.x-b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+5.756054031998179e-15
+\end{verbatim}
+
+Next we check when $b \not \in \colspanof{A}$.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = randn(5,4)
+b = rand(5,1)
+A=[A[:,1:3] A[:,2]]
+F = mySolve(A, b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(x = [0.041439798464912705, -0.13327553074344564, -0.37488456666129705,
+-0.13327553074344564], Flag = "b not in column span of A, neither columns nor 
+rows of A indep")
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+norm(A*F.x-b)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+0.9980756059006674
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+G=myQR(A)
+bb=G.Q'*b
+(b'*b - bb'*bb )^.5
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1×1 Matrix{Float64}:
+ 0.9980756059006671
+\end{verbatim}
+
+We note that, as predicted by our theory, \texttt{norm(A*F.x-b) = (b'*b - bb'*bb)$^{0.5}$}. We have computed the $x$ of smallest norm that minimizes the norm squared error of $Ax-b$ when $A$ has neither independent columns nor independent rows. That's pretty incredible, actually! 

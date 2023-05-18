@@ -1,0 +1,1512 @@
+
+\section*{Learning Objectives}
+
+\begin{itemize}
+\item  What is and how to use a \texttt{for\,loop}
+\item Managing the fact that in Julia, $1 \times 1$ matrices and 1-element vectors are not scalar variables
+\item Debugging, or finding and fixing errors in your code
+\end{itemize}
+
+\section*{Outcomes} 
+\begin{itemize}
+\item How to write basic for loops
+\item How to control the counter
+\item Big sums and for loops go hand in hand
+\item Extracting real values from 1-element vectors
+\item Back substitution at scale, with a \texttt{for\,loop}
+\item (Optional Read) While loops and multiplicative persistence, an open-problem in math
+\item (Optional Read) Nesting multiple \texttt{for\,loop}s
+\end{itemize}
+
+\vspace*{1cm}
+
+\textbf{Either download Lab3 from our Canvas site or open up a Jupyter notebook so that you can enter code as we go. It is suggested that you have line numbering toggled on.}  
+
+\newpage
+
+A \texttt{for\,loop} specifies a block of code that is to be repeatedly executed a fixed (finite) number of times. Various keywords are used to specify this statement: descendants of ALGOL use \textbf{for}, while descendants of Fortran use \textbf{do}; see \url{https://en.wikipedia.org/wiki/For_loop#Traditional_for-loops}. Once you get the knack of \texttt{for\,loop}s, you will begin to feel like you are really doing programming. Hence, it's important to get this right.
+
+\begin{rem} The syntax for writing a \texttt{for\,loop} in Julia is quite different from that in C++ and nearly identical to MATLAB. Make a note in your Google Doc of Programming hints and you'll be fine. If you try to memorize everything without good notes, you'll be frustrated. \textcolor{red}{\bf Wotcha gonna do?}  \textbf{Yes. Make that Google Doc:}; see Chapter~\ref{sec:GoogleDoc4Commands}.  
+\end{rem}
+
+\section{Basic For Loops}
+
+A basic \texttt{for\,loop} in Julia looks like this
+\begin{verbatim}
+for k = k_start : k_end  
+
+  line 1 of code  
+  line 2 of code  
+    .  
+    .  
+    .  
+  line n of code 
+ 
+end
+\end{verbatim}
+
+The key words \texttt{for} and \texttt{end} indicate the beginning and end, respectively of the \texttt{for\,loop}. \texttt{k} is called the \textbf{counter}. It starts at \texttt{k\_start} and ends at \texttt{k\_end}. The code between the \texttt{for} and \texttt{end}, indicated here by \texttt{line$_1$} through \texttt{line$_n$}, constitute the ``loop'' and, if k\_start $\le$ k\_end, the loop is executed for all $k\in \{k\_start, k\_start+1, \ldots, k\_end -1, k\_end  \}$. By default, the counter \texttt{k} is \textbf{incremented} by \texttt{+1} each time the loop is completed. We'll show later how to increment or decrement the counter by values other than \texttt{+1} (e.g., \texttt{-1} or \texttt{+5} ).
+
+\begin{rem}
+By its very nature, a \texttt{for\,loop} will execute a finite number of times
+$$k_{\rm max} = 1 + |k_{\rm end} - k_{\rm start}|. $$ It cannot get ``stuck'' and loop forever. Later, we'll introduce a \texttt{while\,loop}, which will loop until its exit condition is met. A \texttt{while\,loop} can loop forever. 
+\end{rem}
+
+In the following, we present a series of examples that show the ease with which repetitive operations can be automated with a \texttt{for\,loop}
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Compute the sum from 6 to 15
+x = 6 + 7 + 8 + 9 + 10 + 11 + 12 + 13 + 14 + 15
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+105
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Here is how to do the same with a for loop
+# We printout the intermediate calculations
+# to highlight what is happening at each step
+#
+x=0 # initialize x to zero
+for k = 6 : 15 # note the colon separating k_start from k_end
+    x = x + k # add k to x
+    @show k, x
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(k, x) = (6, 6)
+(k, x) = (7, 13)
+(k, x) = (8, 21)
+(k, x) = (9, 30)
+(k, x) = (10, 40)
+(k, x) = (11, 51)
+(k, x) = (12, 63)
+(k, x) = (13, 76)
+(k, x) = (14, 90)
+(k, x) = (15, 105)
+\end{verbatim}
+
+\textcolor{red}{\bf A common error is to fail to initialize the variable that is holding the sum.}
+\begin{lstlisting}[language=Julia,style=mystyle]
+# The goal is to add up the integers from 3 to 8 and store the answer in z
+#
+# A common error is to forget to initialize the variable 
+# that is holding the result of doing the for loop
+# In our case, that variable is z
+for k = 3 : 8
+    z = z + k # add k to z
+    @show z
+end
+# The for loop says to take the current value of z and add k 
+# to it each time you go through the loop
+# However, the first time we execute the code between the **for** and 
+# the **end**, the variable **z** 
+# is undefined and hence we cannot perform the addition **z + k**
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+UndefVarError: z not defined
+
+Stacktrace:
+ [1] top-level scope
+   @ ./In[5]:8
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String,
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+Adding up the numbers from 6 to 15 is not so bad to do by hand. How about the numbers from 1 to 100? You can read this article to see how the mathematician Gauss did it as a schoolboy \url{http://mathcentral.uregina.ca/qq/database/qq.02.06/jo1.html}. Below, we do it in Julia.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+mySum=0
+for i = 1 : 100
+    mySum = mySum + i # add i to mySum
+end
+mySum
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+5050
+\end{verbatim}
+
+\section{Incrementing the Counter by Something other than 1}
+ 
+What if we wanted to add up every third number between 1 and 100? We do this by properly setting how the counter increments through each loop.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+mySum=0
+# note the pattern counter_start:counter_increment:counter_end
+# each separated by a colon :
+for i = 1:3:100 
+    mySum = mySum + i # add i to mySum
+end
+mySum
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1717
+\end{verbatim}
+
+The pattern is \texttt{\bf counter\_start:counter\_increment:counter\_end}, each separated by a colon. We use this to add up every 23rd number between 1 and 100.
+\begin{lstlisting}[language=Julia,style=mystyle]
+mySum=0
+for k = 1:23:100 # note the pattern k_start:k_increment:k_end
+    mySum = mySum + k # add k to mySum
+    @show k, mySum
+end
+mySum
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(k, mySum) = (1, 1)
+(k, mySum) = (24, 25)
+(k, mySum) = (47, 72)
+(k, mySum) = (70, 142)
+(k, mySum) = (93, 235)
+
+235
+\end{verbatim}
+\textbf{Note that the next value of $k$ would have been $93 + 23 > 100$ and hence the loop stopped at $k=93$. }\\
+
+\textcolor{red}{\bf We can also decrement the counter.} Now, decrementing the counter is the same as incrementing by a negative number, which is what we do. Let's now add up the even numbers between 1 and 16, going backwards!
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Example: compute the sum mySum = 16 + 14 + ... + 2
+# We wrote it backwards so you can see the order of the computations
+#
+mySum = 0
+for i = 16:(-2):1 # the parentheses are optional, but make the code more clear
+    mySum = mySum + i
+    @show i, mySum
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(i, mySum) = (16, 16)
+(i, mySum) = (14, 30)
+(i, mySum) = (12, 42)
+(i, mySum) = (10, 52)
+(i, mySum) = (8, 60)
+(i, mySum) = (6, 66)
+(i, mySum) = (4, 70)
+(i, mySum) = (2, 72)
+\end{verbatim}
+
+
+\section{Summation Symbol in Math Equals a For Loop in Programming}
+
+The summation symbol is covered in Chapter 4.1 of the ROB 101 textbook. You will notice straightaway that the summation symbol in math is a \texttt{for\,loop} in programming! The only difference is we have to remember to initialize the sum at zero when we do a \texttt{for\,loop}. 
+\begin{tcolorbox}[title=\textbf{The summation symbol is a for loop and vice versa}]
+
+\begin{itemize}
+    \item $1 + 2 + 3= \sum_{k=1}^{3} k $.  Here, $k$ is called an index and $\sum$ is the symbol for \textbf{sum or summation}. $\sum_{k=1}$ gives the initial value of the index in the sum, which in this case is 1, and  $\sum^3$ gives the final value of the index in the sum, which in this case, is 3. Unless indicated otherwise, the index always increments by one in a sum, just like a counter defaults to incrementing by one in a \texttt{for\,loop}.
+    \item The ``index'' in a summation symbol is equivalent to a ``counter'' in a \texttt{for\,loop}. After a while, you begin to forget which is which! 
+    \item $1 + 2 + \cdots + n = \sum_{k=1}^{n} k $. We note that $\sum_{k=1}$ defines the initial value of the index in the sum to be 1, and  $\sum^n$ defines the final value of the index in the sum to be $n$.
+  \begin{lstlisting}[language=Julia,style=mystyle]
+n=20
+mySum = 0 # Initialize the sum
+for k = 1:n 
+    mySum = mySum + k
+end
+mySum
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+210
+\end{verbatim}
+
+    \item Changing the name of the index from $k$ to $i$, for example, does not change anything
+    $$ \sum_{i=1}^{n} i =  1 + 2 + \cdots + n = \sum_{k=1}^{n} k $$
+    \item $\sum_{k=1}^n k^2:= (1)^2 + (2)^2 + (3)^2 + \cdots + (n)^2.$
+    \item $a_1+a_2 +a_3 =  \sum_{i=1}^{3} a_i$
+    \item $a_7+a_8 +a_9 =  \sum_{i=7}^{9} a_i$. We note that the index is $i$, the initial value of the index is 7, and final value of the index is 9.
+        \item $a_1+a_1 + \cdots + a_n =  \sum_{i=1}^{n} a_i$
+        
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+n=20
+mySum = 0 # Initialize the sum
+for i = 0:n # define the counter and its initial and final values
+    ai = 1/factorial(i) # Define ai
+    mySum = mySum + ai  # add stuff up
+end
+@show exp(1) - mySum
+mySum
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+exp(1) - mySum = -4.440892098500626e-16
+
+2.7182818284590455
+\end{verbatim}
+  
+    
+\end{itemize}
+
+\end{tcolorbox} 
+
+\begin{rem} (Optional Read) There is also a product symbol in math. It looks like this $\Pi$ (an upper case $\pi$). $\Pi_{i=1}^{n} a_i = a_1 \cdot a_2 \cdot a_3 \cdots a_n$, the product of all the terms. In code, it works like this.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# product
+n=10
+prod = 1.0 # Initialize the product at 1.0 and not zero
+for i = 1:n
+    ai = i^2       # you can put anything here
+    prod = prod * ai 
+end
+prod
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1.316818944e13
+\end{verbatim}
+
+\end{rem}
+
+\section{A Brief Intro to Matrix-Vector Multiplication and the Unnerving Fact that 1-Element Vectors in Julia are not Scalars}
+
+Let $a^{\rm row}=\begin{bmatrix} a_1 & a_2 & \cdots & a_k \end{bmatrix}$ be a row vector with $k$ elements and let $b^{\rm col}= \begin{bmatrix} b_1 \\b_2 \\ \vdots \\b_k \end{bmatrix}$ be a column vector \textbf{with the same number of elements as $a^{\rm row}$}. The \textbf{product} of $a^{\rm row}$ and $b^{\rm col}$ is defined as 
+\begin{equation}
+\label{eq:VectorProductFormula}
+    a^{\rm row} \cdot b^{\rm col}:= \sum_{i=1}^k a_i b_i := a_1 b_1 + a_2 b_2 + \cdots + a_k b_k.
+\end{equation}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+aRow = [1.0  pi 5 sqrt(2)]
+bCol = [21; 0; 11; sqrt(2)]
+MVProd1 = 0.0  # Matrix-Vector Product 
+for i = 1:length(aRow)
+    MVProd1 = MVProd1 + aRow[i]*bCol[i]
+end
+@show typeof(MVProd1)
+MVProd1
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+typeof(MVProd1) = Float64
+
+78.0
+\end{verbatim}
+
+Because the variable \texttt{MVProd1} is of Type \texttt{Float64}, we can use it to assign a component of a vector, like this,
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=zeros(3,1)
+x[2]=MVProd1 # Assign second component of x
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×1 Matrix{Float64}:
+  0.0
+ 78.0
+  0.0
+\end{verbatim}
+
+Julia has a built in multiplication command that makes short work of multiplying a $1 \times n$ matrix times an $n$-element vector. Let's use it and try to assign the result to a vector as we did above. 
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Much easier and shorter to type
+aRow=[1.0  pi 5 sqrt(2)]
+bCol=[21; 0; 11; sqrt(2)]
+MVProd2 = aRow*bCol # Multiplication command in Julia
+@show MVProd2
+@show typeof(MVProd2)
+x=zeros(3,1)
+x[2]=MVProd2  # Attempt to assign the second entry of x
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+MVProd2 = [78.0]
+typeof(MVProd2) = Vector{Float64}
+
+MethodError: Cannot `convert` an object of type Vector{Float64} to an object of type
+Float64
+
+Closest candidates are:
+  convert(::Type{T}, ::T) where T<:Number at number.jl:6
+  convert(::Type{T}, ::Number) where T<:Number at number.jl:7
+  convert(::Type{T}, ::Base.TwicePrecision) where T<:Number at twiceprecision.jl:250
+  ...
+
+Stacktrace:
+ [1] setindex!(A::Matrix{Float64}, x::Vector{Float64}, i1::Int64)
+   @ Base ./array.jl:839
+ [2] top-level scope
+   @ In[57]:8
+ [3] eval
+   @ ./boot.jl:360 [inlined]
+ [4] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String,
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+\textcolor{red}{\bf \large What went wrong?}
+\begin{itemize}
+\item Here is what Julia told you: \texttt{MethodError: Cannot `convert` an object of type Vector\{Float64\} to an object of type Float64}
+\item The above is Julia-speak for a TYPE mismatch. In Julia, the product of a $1 \times n $ matrix with an $n$-element vector is a $1$-element \texttt{Vector\{Float64\}}. 
+    \item You can see this when Julia's output, \texttt{MVProd2 = [78.0]}, where you notice the square brackets around the number $78.0$. This signals the variable is either a matrix or a vector. In any case, it is not a regular number. Julia objects vociferously when you attempt the assignment \texttt{x[2]=MVProd2}.
+    \item The solution is quite easy. You need to extract the number from the vector like this, \texttt{x[2]=MVProd2[1]}
+    \item We illustrate below
+\end{itemize}
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Much easier and shorter to type
+aRow=[1.0  pi 5 sqrt(2)]
+bCol=[21; 0; 11; sqrt(2)]
+MVProd2 = aRow*bCol # Multiplication command in Julia
+@show MVProd2
+@show typeof(MVProd2)
+@show typeof(MVProd2[1])
+x=zeros(3,1)
+x[2]=MVProd2[1] #  extract the value as a number 
+                # when assigning as an entry of a vector
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+MVProd2 = [78.0]
+typeof(MVProd2) = Vector{Float64}
+
+typeof(MVProd2[1]) = Float64
+
+3×1 Matrix{Float64}:
+  0.0
+ 78.0
+  0.0
+\end{verbatim}
+
+There is a useful shortcut in Julia that is based on some graduate level mathematics as explained below in Chapter~\ref{sec:AdjointVector}. We illustrate it now and then use it in the next section. It's Ok to use the shortcut without understanding the underlying mathematics (adjoint vectors in dual spaces). It saddens me that we have to even deal with this because we do not even teach adjoint vectors in ROB 501 Mathematics for Robotics! But hey, with a bit of practice, we can learn anything.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Shortcut and probably hard to understand
+aCol=[1.0;  pi; 5; sqrt(2)] # I'm a column vector this time
+bCol=[21; 0; 11; sqrt(2)] # I always was a column vector
+MVProd3 = (aCol')*bCol # parentheses are not necessary, 
+                       #  but note the apostrophe
+@show typeof(MVProd3)
+MVProd3
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+typeof(MVProd3) = Float64
+
+78.0
+\end{verbatim}
+
+The key point is that with the shortcut, no extraction of a value is required. When you ``transpose'' a column vector to create an ``adjoint vector'', which acts like a special kind of row vector, the  multiplication operator directly produces a number--\texttt{Float64}--without enclosing it in a vector. Is you head spinning? Then you can use \texttt{aRow*bCol} and extract values.
+
+\section{Back Substitution as a Backward For Loop}
+Admittedly, doing  backward summations does not make a whole lot of sense. In Chapter 3 of our textbook, and in juliahw2, we'll encounter upper triangular systems of equations, which are equations that look like the one below, except in HW, you'll have 100 unknowns!  
+\begin{equation} 
+\label{eq:UT01b}
+\begin{array}{cc}
+    \begin{aligned}
+     x_1 + 3x_2 + 2 x_3 &=6 \\
+     2 x_2 +x_3 &= -2\\
+     3 x_3 &= 4,
+    \end{aligned} & \iff \underbrace{\left[\begin{array}{rrr} 
+    1 & 3 & 2\\
+\RED 0 & 2 & 1 \\ 
+\RED 0 & \RED  0 & 3  \end{array}\right]}_{A}  
+\underbrace{\left[\begin{array}{c} x_1 \\x_2 \\x_3\end{array} \right]}_{x}
+= \underbrace{\left[\begin{array}{r} 6 \\-2 \\4\end{array} \right]}_{b}.
+\end{array}
+\end{equation}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+@show b = [6;-2;4] # create a column vector
+# @show b = [6 -2 4] # Would make a row vector
+@show typeof(b)
+A = [1 3 2; 0 2 1; 0 0 3]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+b = [6; -2; 4] = [6, -2, 4]
+typeof(b) = Vector{Int64}
+
+3×3 Matrix{Int64}:
+ 1  3  2
+ 0  2  1
+ 0  0  3
+\end{verbatim}
+Note that we added the command \texttt{@show} because Julia only prints out the result of the last calculation in the cell. We included the command \texttt{typeof} to make it clear that $b$ is a column vector. If we had created a row vector, Julia would have said the \texttt{Type} was \texttt{typeof(b) = Matrix\{Int64\}}. You can use the above code and uncomment the second definition of $b$ to verify this statement. When you are just learning a programming language, it never hurts to include extra ``print'' or ``show'' statements.\\
+
+Here is a line by line solution of \eqref{eq:UT01b}.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+@show x=zeros(3,1)
+@show x[3] = b[3]/A[3,3]
+@show x[2] = (b[2]-A[2,3]*x[3])
+@show x[1] = (b[1]-A[1,2:3]'*x[2:3])/A[1,1]
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+x = zeros(3, 1) = [0.0; 0.0; 0.0]
+x[3] = b[3] / A[3, 3] = 1.3333333333333333
+x[2] = b[2] - A[2, 3] * x[3] = -3.333333333333333
+x[1] = (b[1] - (A[1, 2:3])' * x[2:3]) / A[1, 1] = 13.333333333333334
+
+3×1 Matrix{Float64}:
+ 13.333333333333334
+ -3.333333333333333
+  1.3333333333333333
+\end{verbatim}
+
+Here is an alternative line-by-line solution 
+\begin{lstlisting}[language=Julia,style=mystyle]
+@show x=zeros(3,1)
+@show x[3] = b[3]/A[3,3]
+@show x[2] = (b[2]-A[2,2+1:end]'*x[2+1:end])/A[2,2]
+@show x[1] = (b[1]-A[1,1+1:end]'*x[1+1:end])/A[1,1]
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+x = zeros(3, 1) = [0.0; 0.0; 0.0]
+x[3] = b[3] / A[3, 3] = 1.3333333333333333
+x[2] = (b[2] - (A[2, 2 + 1:end])' * x[2 + 1:end]) / A[2, 2] = -1.6666666666666665
+x[1] = (b[1] - (A[1, 1 + 1:end])' * x[1 + 1:end]) / A[1, 1] = 8.333333333333334
+
+3×1 Matrix{Float64}:
+  8.333333333333334
+ -1.6666666666666665
+  1.3333333333333333
+\end{verbatim}
+
+In case that was too fast, here is a blow by blow analysis of what is happening. 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+println("Initialize x to zero")
+@show x=zeros(3,1)
+println(" ")
+println("Show elements contributing to x[3]")
+@show x[3] = b[3]/A[3,3]
+println(" ")
+println("Show elements contributing to x[2]")
+@show A[2,2+1:end]'
+@show x[2+1:end]
+@show temp = A[2,2+1:end]'*x[2+1:end]
+@show x[2] = (b[2]-temp)/A[2,2]
+println(" ")
+println("Show elements contributing to x[1]")
+@show A[1,1+1:end]'
+@show x[1+1:end]
+@show temp = A[1,1+1:end]'*x[1+1:end]
+@show x[1] = (b[1]-temp)/A[1,1]
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+Initialize x to zero
+x = zeros(3, 1) = [0.0; 0.0; 0.0]
+ 
+Show elements contributing to x[3]
+x[3] = b[3] / A[3, 3] = 1.3333333333333333
+ 
+Show elements contributing to x[2]
+(A[2, 2 + 1:end])' = [1]
+x[2 + 1:end] = [1.3333333333333333]
+temp = (A[2, 2 + 1:end])' * x[2 + 1:end] = 1.3333333333333333
+x[2] = (b[2] - temp) / A[2, 2] = -1.6666666666666665
+ 
+Show elements contributing to x[1]
+(A[1, 1 + 1:end])' = [3 2]
+x[1 + 1:end] = [-1.6666666666666665, 1.3333333333333333]
+temp = (A[1, 1 + 1:end])' * x[1 + 1:end] = -2.3333333333333335
+x[1] = (b[1] - temp) / A[1, 1] = 8.333333333333334
+\end{verbatim}
+
+
+We now show how to implement the above cells with a  \texttt{for\,loop}.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=zeros(3,1)
+x[3] = b[3]/A[3,3]
+for i = 2:-1:1
+    x[i] = (b[i]-A[i,i+1:end]'*x[i+1:end])/A[i,i]
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×1 Matrix{Float64}:
+  8.333333333333334
+ -1.6666666666666665
+  1.3333333333333333
+\end{verbatim}
+
+You can totally avoid using the adjoint vector if you wish. You then need to extract the element from the resulting $1$-element vector.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Same code without using the adjoint operator
+# A few comments added
+x=zeros(3,1)
+x[3] = b[3]/A[3,3]
+for i = 2:(-1):1
+    temp = A[i:i,i+1:end]*x[i+1:end] # row times column
+                                     # note the i:i
+    @show temp # 1-element vector
+    @show temp[1] # Float64
+    #
+    x[i]= (b[i]-temp[1])/A[i,i] # We use temp[1] because
+                                # temp only has one element
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+temp = [1.3333333333333333]
+temp[1] = 1.3333333333333333
+temp = [-2.3333333333333335]
+temp[1] = -2.3333333333333335
+
+3×1 Matrix{Float64}:
+  8.333333333333334
+ -1.6666666666666665
+  1.3333333333333333
+\end{verbatim}
+
+
+$x$ is a solution of $Ax = b$ if, and only if, $Ax-b = 0_{3 \times 1}.$ 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Let's see if we really do have a solution
+A*x-b
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×1 Matrix{Float64}:
+ 0.0
+ 2.220446049250313e-16
+ 0.0
+\end{verbatim}
+The above looks pretty close to zero. We'll take it! We agree that solving an equation with three variables does not look so  impressive. Let's create one that has six variables. 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=[
+-0.991273  -0.850184  -1.06297    0.609128   0.498376   0.411742
+ -0.0        0.592798  -0.509626  -0.547334  -0.670348  -0.826093
+  0.0       -0.0        0.673963   0.24726   -0.52135    0.680463
+ -0.0       -0.0        0.0       -0.860824  -0.71363   -0.322208
+ -0.0        0.0       -0.0        0.0        0.249046   0.373825
+  0.0       -0.0       -0.0        0.0        0.0       -0.044526
+]
+#
+b=[0.6849753810315695
+ 0.7387064229251636
+ 0.8252920694637993
+ 0.2707345660171885
+ 0.254653180382145
+ 0.1555903546558295]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6-element Vector{Float64}:
+ 0.6849753810315695
+ 0.7387064229251636
+ 0.8252920694637993
+ 0.2707345660171885
+ 0.254653180382145
+ 0.1555903546558295
+\end{verbatim}
+
+We make a few modest improvements to the code so that it works for ``any'' upper triangular square system of linear equations.
+\begin{lstlisting}[language=Julia,style=mystyle]
+N=length(b)
+x=zeros(N,1) # Makes x an N x 1 matrix of zeros
+x[N] = b[N]/A[N,N]
+for i = (N-1):-1:1
+    x[i] = (b[i]-A[i,i+1:end]'*x[i+1:end])/A[i,i]
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6×1 Matrix{Float64}:
+ -21.381592956092216
+   9.163388707678338
+  11.142804824616672
+  -4.202499623521532
+   6.267662793927989
+  -3.494370809321059
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A*x-b
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6×1 Matrix{Float64}:
+  4.9960036108132044e-15
+ -1.1102230246251565e-16
+ -4.440892098500626e-16
+  1.1102230246251565e-16
+ -1.1102230246251565e-16
+  0.0
+\end{verbatim}
+And once again, that is a very good approximation to a vector of zeros.\\
+
+In case you are wondering why $x$ is a \texttt{6×1\,Matrix{Float64}}
+instead of a \texttt{6-element\,Vector{Float64}}, it's because we used the \texttt{zeros} command to create the vector $x$. Below is a way to force $x$ to be a Julia column vector, though we emphasize that in most cases, like this one, we just do not care!
+\begin{lstlisting}[language=Julia,style=mystyle]
+N=length(b)
+x=0.0*b # x has the same TYPE and SIZE as b
+x[N] = b[N]/A[N,N]
+for i = (N-1):-1:1
+    x[i] = (b[i]-A[i,i+1:end]'*x[i+1:end])/A[i,i]
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6-element Vector{Float64}:
+ -21.381592956092216
+   9.163388707678338
+  11.142804824616672
+  -4.202499623521532
+   6.267662793927989
+  -3.494370809321059
+\end{verbatim}
+
+\begin{rem} (Optional Read) Can you figure out why this works?
+\begin{lstlisting}[language=Julia,style=mystyle]
+N=length(b)
+x=0.0*b # x has the same TYPE and SIZE as b
+for i = N:-1:1
+    x[i] = (b[i]-A[i,i+1:end]'*x[i+1:end])/A[i,i]
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6-element Vector{Float64}:
+ -21.381592956092216
+   9.163388707678338
+  11.142804824616672
+  -4.202499623521532
+   6.267662793927989
+  -3.494370809321059
+\end{verbatim}
+We're exploiting the fact that (i) \texttt{A[N,N+1:end]'} is an EMPTY row (adjoint) vector, (ii)  \texttt{x[N+1:end]} is an EMPTY column vector, and (iii) in Julia, their product is zero!
+\end{rem}
+
+\section{Hidden Variables in For Loops (aka Scope of a Variable)}
+
+In Julia, variables created within a \texttt{for\,loop} are ``hidden from you''. Here are illustrations of what we mean.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Hidden variables in for loops
+x=0.0
+for k = 1:10
+    y=k^2
+    x = x+y
+end
+
+@show y
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+UndefVarError: y not defined
+
+Stacktrace:
+ [1] top-level scope
+   @ show.jl:955
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String,
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+Even the counter used in the  \texttt{for\,loop} is hidden from you.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=0.0
+for k = 1:10
+    y=k^2
+    x = x+y
+end
+
+@show k
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+UndefVarError: k not defined
+
+Stacktrace:
+ [1] top-level scope
+   @ show.jl:955
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String,
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+However, variables defined outside of the \texttt{for\,loop} are available to you, except for the counter used in the loop.\\
+
+The variable $x$ is defined outside of the loop, hence we can see its final value when the loop is finished.
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=0.0
+for k = 1:10
+    y=k^2
+    x = x+y
+end
+
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+385.0
+\end{verbatim}
+
+Here, we initialize the counter $k$ to zero and the intermediate variable $y$ to not a number, \texttt{NaN} (we could have used any value available in Julia). 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=0.0; k=0;y=NaN
+for k = 1:10
+    y=k^2
+    x = x+y
+end
+
+# Show the final values of these quantities
+[x y k]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1×3 Matrix{Float64}:
+ 385.0  100.0  0.0
+\end{verbatim}
+
+What we see are the final values for $x$ and $y$ and our defined initial value for $k$. However, if use the \texttt{@show} command within the loop, then we can see how $k$ is evolving.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=0.0; k=0;y=NaN
+for k = 1:5
+    y=k^2
+    x = x+y
+    @show k
+end
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+k = 1
+k = 2
+k = 3
+k = 4
+k = 5
+\end{verbatim}
+
+\begin{tcolorbox}[title={\bf \large Scope of a Variable}]
+
+The technical term for what we are illustrating above is the ``Scope of a Variable''. You can learn more in the Julia documentation \url{https://docs.julialang.org/en/v1/manual/variables-and-scoping}. For ROB 101, the little we have presented should cover your needs. 
+\end{tcolorbox}
+
+\section{Debugging}
+
+The main strategy we emphasize here is to \textcolor{red}{\bf locate the line on which the error occurs and then use a bunch of \texttt{@show} commands to see what is wrong.} This simple strategy can take you a long ways! 
+
+\subsection{Dimension Mismatch}
+To add or multiply matrices, they must have the correct sizes.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=[1 2 3; 4 5 6]
+B=[7 8; 9 10]
+#
+A+B
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+DimensionMismatch("dimensions must match: a has dims (Base.OneTo(2), Base.OneTo(3)), 
+b has dims (Base.OneTo(2), Base.OneTo(2)), mismatch at 2")
+
+Stacktrace:
+ [1] promote_shape
+   @ ./indices.jl:178 [inlined]
+ [2] promote_shape(a::Matrix{Int64}, b::Matrix{Int64})
+   @ Base ./indices.jl:169
+ [3] +(A::Matrix{Int64}, Bs::Matrix{Int64})
+   @ Base ./arraymath.jl:45
+ [4] top-level scope
+   @ In[1]:4
+ [5] eval
+   @ ./boot.jl:360 [inlined]
+ [6] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String, 
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+We add some appropriate \texttt{\@show} commands. 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=[1 2 3; 4 5 6]
+B=[7 8; 9 10]
+@show size(A)
+@show size(B)
+#
+A+B
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+size(A) = (2, 3)
+size(B) = (2, 2)
+DimensionMismatch("dimensions must match: a has dims (Base.OneTo(2), Base.OneTo(3)), 
+b has dims (Base.OneTo(2), Base.OneTo(2)), mismatch at 2")
+\end{verbatim}
+
+OK, we now see the problem: A and B have different sizes. \\
+
+Below, please note that Julia's error message assumes that the generic matrix product is $A * B$, even when we have formed $B*A$. When you read the error message below, ``DimensionMismatch(``matrix A has dimensions (2,3), matrix B has dimensions (2,2)''), \textcolor{red}{\bf you must realize that $A$ refers to the first matrix in the matrix product and $B$ to the second matrix.}  We see clearly that $B$ is $ 2 \times 3 ~~(2,3)$ while $A$ is $ 2 \times 2 ~~(2,2)$. 
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+B=[1 2 3; 4 5 6]
+A=[7 8; 9 10]
+#
+B*A
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+DimensionMismatch("matrix A has dimensions (2,3), matrix B has dimensions (2,2)")
+
+Stacktrace:
+ [1] _generic_matmatmul!(C::Matrix{Int64}, tA::Char, tB::Char, A::Matrix{Int64},
+ B::Matrix{Int64}, _add::LinearAlgebra.MulAddMul{true, true, Bool, Bool})
+   @ LinearAlgebra 
+/buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.6/
+LinearAlgebra/src/matmul.jl:814
+ [2] generic_matmatmul!(C::Matrix{Int64}, tA::Char, tB::Char, A::Matrix{Int64}, 
+ B::Matrix{Int64}, _add::LinearAlgebra.MulAddMul{true, true, Bool, Bool})
+   @ LinearAlgebra /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/
+   v1.6/LinearAlgebra/src/matmul.jl:802
+ [3] mul!
+   @ /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.6/LinearAlgebra
+   /src/matmul.jl:302 [inlined]
+ [4] mul!
+   @ /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.6/
+   LinearAlgebra/src/matmul.jl:275 [inlined]
+ [5] *(A::Matrix{Int64}, B::Matrix{Int64})
+   @ LinearAlgebra /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.6/
+   LinearAlgebra/src/matmul.jl:153
+ [6] top-level scope
+   @ In[2]:4
+ [7] eval
+   @ ./boot.jl:360 [inlined]
+ [8] include_string(mapexpr::typeof(REPL.softscope), mod::Module, 
+ code::String, filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+B=[1 2 3; 4 5 6]
+A=[7 8; 9 10]
+@show size(A)
+@show size(B)
+#
+B*A
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+size(A) = (2, 2)
+size(B) = (2, 3)
+DimensionMismatch("matrix A has dimensions (2,3), matrix B has dimensions (2,2)")
+\end{verbatim}
+
+
+\subsection{More on $1 \times 1$ Matrices are not Numbers}
+
+After providing some data, we create what looks like a perfectly fine \texttt{for\,loop} to implement back substitution. Yet, it fails. What's up? 
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=[
+-0.991273  -0.850184  -1.06297    0.609128   0.498376   0.411742
+ -0.0        0.592798  -0.509626  -0.547334  -0.670348  -0.826093
+  0.0       -0.0        0.673963   0.24726   -0.52135    0.680463
+ -0.0       -0.0        0.0       -0.860824  -0.71363   -0.322208
+ -0.0        0.0       -0.0        0.0        0.249046   0.373825
+  0.0       -0.0       -0.0        0.0        0.0       -0.044526
+]
+#
+b=[0.6849753810315695
+ 0.7387064229251636
+ 0.8252920694637993
+ 0.2707345660171885
+ 0.254653180382145
+ 0.1555903546558295];
+\end{lstlisting}
+\textbf{Output} 
+Nothing due to the semicolon. 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+N=length(b)
+x=0.0*b # x has the same TYPE and SIZE as b
+x[N] = b[N]/A[N,N]
+for i = (N-1):-1:1
+    x[i] = (b[i]-A[i:i,i+1:end]*x[i+1:end])/A[i,i]
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+MethodError: no method matching -(::Float64, ::Vector{Float64})
+For element-wise subtraction, use broadcasting with dot syntax: scalar .- array
+Closest candidates are:
+  -(::SparseArrays.AbstractSparseMatrixCSC, ::Array) at /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.6/
+  SparseArrays/src/sparsematrix.jl:1746
+  -(::AbstractArray, ::AbstractArray) at arraymath.jl:37
+  -(::Float64) at float.jl:320
+  ...
+
+Stacktrace:
+ [1] top-level scope
+   @ ./In[9]:5
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, 
+ code::String, filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+We see that the error is on line 5. Hence, we place a bunch of \texttt{\@show} commands to see if we can figure this out. We note that \texttt{A[i:i,i+1:end]} extracts out the $i$-th row of $A$ and keeps it as a ``row vector'' in the form of a $1 \times 6-i$ matrix. When it multiplies the column vector $x[i+1:end]$, we get a $1 \times 1$ matrix in Julia. 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+N=length(b)
+x=0.0*b # x has the same TYPE and SIZE as b
+x[N] = b[N]/A[N,N]
+for i = (N-1):-1:1
+    @show i
+    @show b[i]
+    @show A[i:i,i+1:end]*x[i+1:end]
+    @show A[i,i]
+    x[i] = (b[i]-A[i:i,i+1:end]*x[i+1:end])/A[i,i]
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+i = 5
+b[i] = 0.254653180382145
+A[i:i, i + 1:end] * x[i + 1:end] = [-1.3062831677944449]
+A[i, i] = 0.249046
+MethodError: no method matching -(::Float64, ::Vector{Float64})
+For element-wise subtraction, use broadcasting with dot syntax: scalar .- array
+Closest candidates are:
+  -(::SparseArrays.AbstractSparseMatrixCSC, ::Array) at 
+  /buildworker/worker/package_linux64/build/usr/share/julia/stdlib/v1.6/
+  SparseArrays/src/sparsematrix.jl:1746
+  -(::AbstractArray, ::AbstractArray) at arraymath.jl:37
+  -(::Float64) at float.jl:320
+  ...
+
+Stacktrace:
+ [1] top-level scope
+   @ ./In[10]:9
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, 
+ code::String, filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+Key things to notice
+\begin{itemize}
+    \item b[i] = 0.254653180382145 is a number
+    \item A[i:i, i + 1:end] * x[i + 1:end] = [-1.3062831677944449] results in a $1 \times 1$ matrix. \textcolor{red}{\bf We can tell by the square brackets around the number!}
+    \item We cannot subtract a matrix from a number. 
+    \item The fix is to extract the number from the matrix via
+    \item (A[i:i, i + 1:end] * x[i + 1:end])\textcolor{red}{[1]}    
+\end{itemize}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+N=length(b)
+x=0.0*b # x has the same TYPE and SIZE as b
+x[N] = b[N]/A[N,N]
+for i = (N-1):-1:1
+    @show A[i:i,i+1:end]*x[i+1:end]
+    @show (A[i:i,i+1:end]*x[i+1:end])[1]
+    x[i] = ( b[i]-(A[i:i,i+1:end]*x[i+1:end])[1] )/A[i,i]
+end
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+A[i:i, i + 1:end] * x[i + 1:end] = [-1.3062831677944449]
+(A[i:i, i + 1:end] * x[i + 1:end])[1] = -1.3062831677944449
+A[i:i, i + 1:end] * x[i + 1:end] = [-3.3468779699011106]
+(A[i:i, i + 1:end] * x[i + 1:end])[1] = -3.3468779699011106
+A[i:i, i + 1:end] * x[i + 1:end] = [-6.684546098549327]
+(A[i:i, i + 1:end] * x[i + 1:end])[1] = -6.684546098549327
+A[i:i, i + 1:end] * x[i + 1:end] = [-4.69333207620914]
+(A[i:i, i + 1:end] * x[i + 1:end])[1] = -4.69333207620914
+A[i:i, i + 1:end] * x[i + 1:end] = [-20.51002041333283]
+(A[i:i, i + 1:end] * x[i + 1:end])[1] = -20.51002041333283
+6-element Vector{Float64}:
+ -21.381592956092216
+   9.163388707678338
+  11.142804824616672
+  -4.202499623521532
+   6.267662793927989
+  -3.494370809321059
+\end{verbatim}
+
+OK, we did not need to print out the intermediate results all six times, but hopefully, this drives home the point: use the \texttt{@show} command to help you figure out what is going wrong. \textbf{Computers do what you tell them to do, not what you want them to do.} What is perfectly fine code in one language (here, the command ``A[i:i,i+1:end]*x[i+1:end]'' would produce a number in MATLAB), may fail to do what you expect in another language. It's the same with \textit{false friends} in human languages. 
+
+
+
+\subsection{Hidden Variables}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+Avg=0.0
+x = randn(1,4)
+for k = 1:length(x)
+    Avg = Avg + x[k]
+end
+Avg/k
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+UndefVarError: k not defined
+
+Stacktrace:
+ [1] top-level scope
+   @ In[4]:6
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, 
+ code::String, filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+The counter remains hidden even if you initialize it before the \texttt{for\,loop}. Here, Julia uses $k=0$ and not the final value of the counter, which would be \texttt{length(x)}.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+Avg=0.0
+k=0
+x = randn(1,4)
+for k = 1:length(x)
+    Avg = Avg + x[k]
+end
+Avg/k
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+-Inf
+\end{verbatim}
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+
+
+\section{(Optional Read) While Loops and an Open Problem in Mathematics}
+
+With a \texttt{for\,loop}, the maximum number of iterations is upper bounded by $1+|k_{end}-k_{start}|$. A \texttt{while\,loop}, however, will iterate (loop) until a Boolean (means \textbf{T/F}) condition is satisfied. Unlike a \texttt{for\,loop}, a \texttt{while\,loop} can loop forever, so be careful when you use them. We'll show first a really easy example, which you could also solve with a \texttt{for\,loop} and then some less trivial examples.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# How to compute the factorial of a non-negative integer
+counter = 5
+myFactorial = 1
+
+while (counter > 0)
+    myFactorial = myFactorial * counter;      #Multiply
+    counter = counter - 1;                #Decrement
+end
+
+myFactorial
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+120
+\end{verbatim}
+
+Because we have not used Booleans before, let's see what the expression \texttt{(counter > 0)} is doing for us.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# How to compute the factorial of a non-negative integer
+counter = 5
+myFactorial = 1
+
+while (counter > 0)
+    myFactorial = myFactorial * counter;      #Multiply
+    counter = counter - 1;                #Decrement
+    @show (counter > 0)
+    @show typeof((counter > 0))
+end
+
+myFactorial
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+counter > 0 = true
+typeof(counter > 0) = Bool
+counter > 0 = true
+typeof(counter > 0) = Bool
+counter > 0 = true
+typeof(counter > 0) = Bool
+counter > 0 = true
+typeof(counter > 0) = Bool
+counter > 0 = false
+typeof(counter > 0) = Bool
+
+120
+\end{verbatim}
+The \texttt{while\,loop} stopped when it encountered a \textbf{F} condition: \texttt{counter > 0 = false}.\\
+
+Question: What is the smallest value of $n$ so that the sum $1 + 2 + \cdots + n$ is greater than 500?
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+sum=0
+n=0
+while (sum < 501)
+    n = n + 1
+    sum = sum + n
+end
+n
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+32
+\end{verbatim}
+
+Here is another way to express the logic, where this time, we want to be greater than 50.
+\begin{lstlisting}[language=Julia,style=mystyle]
+sum=0
+n=0
+#
+# the exclamation point is logical not
+# !true = false
+# !false = true
+#
+while !(sum > 50)
+    n = n + 1
+    sum = sum + n
+    @show((sum > 50))
+    @show(!(sum > 50))
+end
+println("The while loop terminated when !(sum > 50) = false")
+n 
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = false
+!(sum > 50) = true
+sum > 50 = true
+!(sum > 50) = false
+The while loop terminated when !(sum > 50) = false
+
+10
+\end{verbatim}
+
+\begin{tcolorbox}[title=\textbf{An Open Math Problem: Multiplicative Persistence}]
+
+Consider the number 327. It has digits 3, 2, and 7. If we multiply the digits, we obtain 42. The number 42 has two digits, 4 and 2. If we multiply them, we obtain 8, which now has a single digit.  The \textbf{multiplicative persistence} of a positive integer is the number of times you can go through the cycle of multiplying its digits together, then multiplying the digits of that number, etc., until you reach a single digit number. \\
+
+It is a \textbf{Conjecture in Mathematics} that for any integer $n >0$, its multiplicative persistence is less than or equal to eleven (yes, the number 11). Can you believe that? A number with a billion trillion digits will always have a multiplicative persistence less than or equal to 11? Say what? No one has found a number with multiplicative persistence greater than 11. And yes, of course, thousands of people, amateurs and professionals alike, have written search routines for a number with multiplicative persistence equal to 12 or higher. A few staunch mathematicians have tried to prove that 11 is in fact the largest it can ever be, and others have tried to show that larger is possible. So far, all attempts have failed! \textbf{The genius Srinivasa Ramanujan has worked on this problem \url{https://it.wikipedia.org/wiki/Srinivasa_Ramanujan}}.  It's fun to play with the code.
+\end{tcolorbox} 
+
+
+The command \texttt{digits} takes a positive integer and decomposes it into the digits multiplying the various powers of 10.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+N=277777788888899
+i=0; Ndigits=digits(N);K=length(Ndigits)  
+while (K>1)
+    i=i+1    
+    prodN=Ndigits[1]
+    for k = 2:K
+       prodN=prodN*Ndigits[k]
+    end
+    @show prodN
+    Ndigits=digits(prodN)
+    K=length(Ndigits)  
+end
+println("The multiplicative persistence of $N is  $i")
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+prodN = 4996238671872
+prodN = 438939648
+prodN = 4478976
+prodN = 338688
+prodN = 27648
+prodN = 2688
+prodN = 768
+prodN = 336
+prodN = 54
+prodN = 20
+prodN = 0
+The multiplicative persistence of 277777788888899 is  11
+\end{verbatim}
+
+
+\section{(Optional Read) Double For Loops}
+
+You can nest one \texttt{for\,loop} within another. Here is an example that takes a square matrix and zeros all of its entries below the diagonal. In terms of indices, we are going to zero $A[i,j]$ for all $j < i$, where $j$ is the column number and $i$ is the row number. Hence, in row one, there is nothing to zero. In row two, we need to zero $A[2,1]$. In row three, we need to zero $A[3,1]$ and $A[3,2]$, etc.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+using Random
+Random.seed!(4321)
+A=randn(6,6)
+nRows, nCols =size(A)
+for i = 1:nRows
+    for j=1:i-1
+        A[i,j] = 0.0
+    end
+end
+A
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6×6 Matrix{Float64}:
+ -0.991273  -0.850184  -1.06297    0.609128   0.498376   0.411742
+  0.0        0.592798  -0.509626  -0.547334  -0.670348  -0.826093
+  0.0        0.0        0.673963   0.24726   -0.52135    0.680463
+  0.0        0.0        0.0       -0.860824  -0.71363   -0.322208
+  0.0        0.0        0.0        0.0        0.249046   0.373825
+  0.0        0.0        0.0        0.0        0.0       -0.044526
+\end{verbatim}
+
+With a bit of clever indexing, you can do the same thing with a single \texttt{for\,loop}.
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+using Random
+Random.seed!(4321)
+A=randn(6,6)
+nRows, nCols = size(A)
+for i = 1:nRows
+    A[i,1:i-1]=0.0*A[i,1:i-1]
+end
+A
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6×6 Matrix{Float64}:
+ -0.991273  -0.850184  -1.06297    0.609128   0.498376   0.411742
+ -0.0        0.592798  -0.509626  -0.547334  -0.670348  -0.826093
+  0.0       -0.0        0.673963   0.24726   -0.52135    0.680463
+ -0.0       -0.0        0.0       -0.860824  -0.71363   -0.322208
+ -0.0        0.0       -0.0        0.0        0.249046   0.373825
+  0.0       -0.0       -0.0        0.0        0.0       -0.044526
+\end{verbatim}
+
+
+\section{(Optional Read) A Less Brief Intro to Matrix-Vector Multiplication and the Unnerving Fact that 1 x 1 Matrices and 1-Element Vectors in Julia are not Scalars}
+\label{sec:AdjointVector}
+
+Let $a^{\rm row}=\begin{bmatrix} a_1 & a_2 & \cdots & a_k \end{bmatrix}$ be a row vector with $k$ elements and let $b^{\rm col}= \begin{bmatrix} b_1 \\b_2 \\ \vdots \\b_k \end{bmatrix}$ be a column vector \textbf{with the same number of elements as $a^{\rm row}$}. The \textbf{product} of $a^{\rm row}$ and $b^{\rm col}$ is defined as 
+\begin{equation}
+\label{eq:VectorProductFormula02}
+    a^{\rm row} \cdot b^{\rm col}:= \sum_{i=1}^k a_i b_i := a_1 b_1 + a_2 b_2 + \cdots + a_k b_k.
+\end{equation}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+aRow = [1.0  pi 5 sqrt(2)]
+bCol = [21; 0; 11; sqrt(2)]
+MVProd1 = 0.0
+for i = 1:length(aRow)
+    MVProd1 = MVProd1 + aRow[i]*bCol[i]
+end
+@show typeof(MVProd1)
+MVProd1
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+typeof(MVProd1) = Float64
+78.0
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=zeros(3,1)
+x[2]=MVProd1 # Assign second component of x
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×1 Matrix{Float64}:
+  0.0
+ 78.0
+  0.0
+\end{verbatim}
+
+\textbf{Because all of the $a_i$ and $b_i$ are real numbers, the sum of their products is a real number.} \textcolor{red}{\bf When you use the built-in multiplication command in Julia, however, you obtain a 1-element vector.} We illustrate this.
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Much easier and shorter to type
+aRow=[1.0  pi 5 sqrt(2)]
+@show typeof(aRow)
+bCol=[21; 0; 11; sqrt(2)]
+@show typeof(bCol)
+MVProd2 = aRow*bCol
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+typeof(aRow) = Matrix{Float64}
+typeof(bCol) = Vector{Float64}
+
+1-element Vector{Float64}:
+ 78.0
+\end{verbatim}
+
+\textcolor{red}{\bf Does this make a difference? } It sure does!
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=zeros(3,1)
+x[2]=MVProd2
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+MethodError: Cannot `convert` an object of type Vector{Float64} to an object of 
+type Float64
+
+Closest candidates are:
+  convert(::Type{T}, ::T) where T<:Number at number.jl:6
+  convert(::Type{T}, ::Number) where T<:Number at number.jl:7
+  convert(::Type{T}, ::Base.TwicePrecision) where T<:Number at twiceprecision.jl:250
+  ...
+
+Stacktrace:
+ [1] setindex!(A::Matrix{Float64}, x::Vector{Float64}, i1::Int64)
+   @ Base ./array.jl:839
+ [2] top-level scope
+   @ In[40]:2
+ [3] eval
+   @ ./boot.jl:360 [inlined]
+ [4] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String,
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+The source of the error is that we need top assign numbers to the entries of vectors and matrices and not other vectors or matrices. When we coded \texttt{x[2] = MVProd2} we attempted to insert the $1$-element vector into the second entry of the vector $x$. Note the error message \textcolor{red}{\bf MethodError: Cannot `convert` an object of type Vector\{Float64\} to an object of type \{Float64\}. } 
+Because $x$ already contains numbers, for a given value of the index $k$, we need to place a number into $x[k]$; in particular, \textbf{we cannot insert a 1-element vector into $x[2]$}. What do we do? We extract the value of the $1$-element Vector\{Float64\} and then assign it to $x[k]$.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=zeros(3,1)
+@show typeof(MVProd2)
+@show typeof(MVProd2[1])
+x[2]=MVProd2[1] # When we extract the value from a 
+                # Vector{Float64} it becomes a Float64
+                # and we can assign it as a component of a vector
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+typeof(MVProd2) = Vector{Float64}
+typeof(MVProd2[1]) = Float64
+3×1 Matrix{Float64}:
+  0.0
+ 78.0
+  0.0
+\end{verbatim}
+
+Here is second way to solve the ``problem''. 
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Second Solution
+aCol=[1.0;  pi; 5; sqrt(2)]
+@show typeof(aCol)
+@show typeof(aCol') # Note the apostrophe
+bCol=[21; 0; 11; sqrt(2)]
+@show typeof(bCol)
+MVProd3 = (aCol')*bCol # parentheses are not necessary, 
+                       #  but note the apostrophe
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+typeof(aCol) = Vector{Float64}
+typeof(aCol') = LinearAlgebra.Adjoint{Float64, Vector{Float64}}
+typeof(bCol) = Vector{Float64}
+
+78.0
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+x=zeros(3,1)
+@show typeof(MVProd3)
+x[2]=MVProd3
+x
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+typeof(MVProd3) = Float64
+
+3×1 Matrix{Float64}:
+  0.0
+ 78.0
+  0.0
+\end{verbatim}
+
+\texttt{LinearAlgebra.Adjoint{Float64, Vector{Float64}}} is another TYPE in Julia. An adjoint is a kind of vector that you will only see in \textbf{advanced linear algebra courses}. An adjoint can be thought of as a special kind of row vector. In advanced math, an adjoint vector times an ordinary (column) vector is a real number. The fact that Julia uses this TYPE is maddening for me, because it makes the language confusing for beginning college students. In fact, most engineering students will never see ``adjoints'' even when working on a PhD. Now, your author took most of the PhD qualifying courses in math, so for me, it's OK. But for you, it's just an unneeded distraction. Enough said! 
+
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}

@@ -1,0 +1,1350 @@
+
+
+
+\section*{Learning Objectives}
+
+\begin{itemize}
+\item  More ways to create vectors and matrices
+\item  Indexing as a means to access the elements of vectors and matrices
+\item Debugging, or finding and fixing errors in your code
+\end{itemize}
+
+\section*{Outcomes} 
+\begin{itemize}
+\item Vectors
+\item Matrices
+\begin{itemize}
+\item \texttt{zeros}(n,m)
+\item \texttt{ones}(n,m)
+\item \texttt{using Random}
+\item  \texttt{rand}(n,m) and \texttt{randn}(n,m)
+    \end{itemize}
+\item Adding columns or rows to matrices, concatenation
+\item Indexing into row vectors (aka $1 \times n$ matrices in Julia ) and column vectors (aka simply a vector in Julia)
+\item Indexing into matrices
+\begin{itemize}
+\item Extracting columns is easy
+\item Extracting rows requires concentration
+\item Extracting sub-matrices
+\item Help command in Julia
+    \end{itemize}
+    \item Creating ``empty'' matrices via \texttt{Vector\{Float64\}(undef, n)} and  \texttt{Matrix\{Float64\}(undef, n, m)}, and 
+    \item \texttt{B = copy(A)} and how that is different than \texttt{B=A}
+    \item Creating an identity matrix in Julia is a bit odd.
+\end{itemize}
+
+\vspace*{1cm}
+
+\textbf{Either download Lab2 from our Canvas site or open up a Jupyter notebook so that you can enter code as we go. It is suggested that you have line numbering toggled on.}  
+
+\newpage
+
+At the end of Lab 1, we saw how to create (small) row vectors, columns vectors and $n \times m$ matrices. You may want to review that material before starting here.\\
+
+\section{Friendly Checks}
+
+In your lab assignments, Julia HWs, and Projects, we are inserting here and there a means to detect errors in your code before you get too deep into the assignments. \textcolor{red}{\bf Mostly, we are not checking that you are correct, we are instead checking that you are not obviously wrong.} In mathematical language, we are checking ``necessary conditions'' but not ``sufficient conditions'' for you to be correct. In simple terms, you can pass our tests, and still be wrong. You will just not be wrong in a way that we anticipated, which is kind of a bummer for you. 
+
+
+\begin{rem} We have messed up in the past by updating the numbers in a problem and failing to update the associated tests! If you and your classmates are all failing a test, let us know and we'll double check our test. In the end, we are trying to decrease your frustration and uncertainty. Sometimes, we add to it! C'est la vie !
+\end{rem}
+
+Here is an example of how the tests work.
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Warm up work for you: # Create a column vector (called almost_zero_vec) 
+# that has 4 entries: the 2nd entry is -2.5, and others are zeros
+# 
+almost_zero_vec = NaN    #Replace NaN with your answer
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+NaN
+\end{verbatim}
+
+
+Here is the solution:
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Warm up work for you: # Create a column vector (called almost_zero_vec) 
+# that has 4 entries: the 2nd entry is -2.5, and others are zeros
+# 
+almost_zero_vec = [0, -2.5, 0, 0]    #Replace NaN with your answer
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4-element Vector{Float64}:
+  0.0
+ -2.5
+  0.0
+  0.0
+\end{verbatim}
+
+Here is an example test, \textbf{designed to not give away the answer and yet, try to let you know if you are wrong}:
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# friendly check
+test1 = almost_zero_vec'*almost_zero_vec
+ind = [1 3 4]
+test2 = sum(abs.(almost_zero_vec[ind]))
+test3 = length(almost_zero_vec)
+
+is_it_correct_check1 = (test1 == 6.25) ? "Yes" : "No" 
+is_it_correct_check2 = (test2 == 0.0) ? "Yes" : "No"
+is_it_correct_check3 = (test3 == 4) ? "Yes" : "No"
+
+@show is_it_correct_check1;  
+@show is_it_correct_check2; 
+@show is_it_correct_check3;  
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+is_it_correct_check1 = "Yes"
+is_it_correct_check2 = "Yes"
+is_it_correct_check3 = "Yes"
+\end{verbatim}
+
+In this case, you're good to go. Suppose you had instead posed the solution as 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Warm up work for you: # Create a column vector (called almost_zero_vec) 
+# that has 5- entries: the 2nd entry is -2.5, and others are zeros
+# 
+almost_zero_vec = [0, 2.5, 0, 0, 0]    #Replace NaN with your answer
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+5-element Vector{Float64}:
+ 0.0
+ 2.5
+ 0.0
+ 0.0
+ 0.0
+\end{verbatim}
+
+Then the friendly test let's you know that something is wrong via the line \texttt{is\_it\_correct\_check3 = "No"}. \textbf{That you failed \texttt{test3} is not meant to be particularly helpful to your debugging process.} You can ignore that part. 
+\begin{lstlisting}[language=Julia,style=mystyle]
+@show is_it_correct_check3;  
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+is_it_correct_check1 = "Yes"
+is_it_correct_check2 = "Yes"
+is_it_correct_check3 = "No"
+\end{verbatim}
+\textcolor{red}{\bf Most of our tests do not specify the nature of your mistake.} You need to find it yourself. Our goal is simply to prevent you from compounding errors as you proceed with an assignment. You may be able to study our error-checking code to see, as in this case, we were checking the \texttt{length} of the vector (a command we have not yet taught you), but normally we try to hide what we are checking. \\
+
+Below is a wrong answer that passes our test because we are not checking the sign of the non-zero number. We just assume you will get that part correct. 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Warm up work for you: # Create a column vector (called almost_zero_vec) 
+# that has 4 entries: the 2nd entry is -2.5, and others are zeros
+# 
+almost_zero_vec = [0, 2.5, 0, 0]    #Replace NaN with your answer
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4-element Vector{Float64}:
+  0.0
+  2.5
+  0.0
+  0.0
+\end{verbatim}
+
+The output of the test code is 
+\begin{verbatim}
+is_it_correct_check1 = "Yes"
+is_it_correct_check2 = "Yes"
+is_it_correct_check3 = "Yes"
+\end{verbatim}
+
+\textcolor{red}{\bf From the Friendly check, it looks like you are good to go, even though you got the sign wrong.} On the other hand, you had the right number of elements, the magnitude of the second value was correct, and you had the zero elements in the correct locations. We checked for a lot of things, but not everything. In the pilot offering of ROB 101, there were no friendly checks at all! 
+
+\section{New Ways to Create Matrices}
+
+\subsection{Using Built-in Functions}
+
+We'll quickly illustrate the following methods for creating matrices. The \texttt{rand} command is very useful for creating examples that have hundreds of variables (for later in the course).
+\begin{itemize}
+\item \texttt{zeros}(n,m)
+\item \texttt{ones}(n,m)
+\item \texttt{using Random}
+\item  \texttt{rand}(n,m) (uniform) and with an extra ``n'' \texttt{randn}(n,m) (normal, aka Gaussian or Bell Curve)
+    \end{itemize}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Creates a matrix of zeros with n-rows and m-columns
+A = zeros(3,5)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×5 Matrix{Float64}:
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  0.0  0.0
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Creates a matrix of ones with n-rows and m-columns
+B = ones(5,3)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+5×3 Matrix{Float64}:
+ 1.0  1.0  1.0
+ 1.0  1.0  1.0
+ 1.0  1.0  1.0
+ 1.0  1.0  1.0
+ 1.0  1.0  1.0
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Install the package Random
+using Random
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(none)
+\end{verbatim}
+
+The command \texttt{rand}(n) or \texttt{rand}(n,m) produces numbers that are ``uniformly distributed between zero and one''. This roughly means that each $x \in [0, 1]$ is equally likely; a more precise statement would be that, for all $0\le a < b \le 1$, the probability that $x \in [a, b]$ is equal to $b-a$. The related command \texttt{randn}(n) or \texttt{randn}(n,m) produces numbers that are ``normally distributed between minus infinity and plus infinity''. This means that the random number comes from a Bell curve. 
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Run me
+Random.seed!(4321) # Set the seed so that each of you get the same results. 
+@show myVector = rand(9) # column vector
+myMatrix = rand(3,4)  # 3 x 4 matrix with random entries in [0,1]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+myVector = rand(9) = [0.1619496289112512, 0.1385032717390522, 0.6355055732000539,
+0.36326986232801595, 0.3700559311804976, 0.8332539255123794, 0.6910169607353331,
+0.08205602210008567, 0.6441883306325207]
+
+3×4 Matrix{Float64}:
+ 0.873045  0.413895  0.0578154  0.55376
+ 0.705639  0.492289  0.914811   0.544223
+ 0.528017  0.24885   0.917523   0.478742
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Run me
+Random.seed!(4321) # Set the seed so that each of you get the same results. 
+myMatrix = randn(6,5)  # 6 x 5 matrix with random entries in (-inf, inf)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6×5 Matrix{Float64}:
+ -0.229071  -0.991273  -0.850184   -1.06297     0.609128
+  0.321924  -0.158205   0.592798   -0.509626   -0.547334
+  0.74283    1.02869   -0.358643    0.673963    0.24726
+  0.948465  -1.94117   -0.0688075   0.317936   -0.860824
+ -0.540755  -1.00753    1.51188    -1.13022     1.45335
+ -1.95979    0.825056  -0.718068   -0.0391889   0.453098
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Run me
+# if we do not set the seed, each time we get a new set of random numbers. 
+myMatrix = randn(6,5)  # 6 x 5 matrix with random entries in (-inf, inf)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6×5 Matrix{Float64}:
+  0.498376   0.411742  -0.753106  -0.984998   0.53562
+ -0.670348  -0.826093  -0.219619  -0.582682   0.151646
+ -0.52135    0.680463   0.885311  -0.703102   1.64057
+ -0.71363   -0.322208  -0.991709  -1.44334   -1.41471
+  0.249046   0.373825  -1.04189   -0.254509  -0.0348657
+  0.851102  -0.044526  -1.34575    2.70248    0.666966
+\end{verbatim}
+
+
+
+We'll use the ability to generate random matrices of arbitrary size when we start testing our own algorithms. Let's try \texttt{A = randn(100,100)}. Julia cannot printout all of its entries. Julia is showing here the first three columns and last three columns, of the first 13 rows and the last 12 rows. 
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Run me
+A = randn(100,100)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+100×100 Matrix{Float64}:
+ -1.21507     1.51014     -0.358913  ... 0.202398    0.92658     0.300415
+ -0.0293227  -0.643004     0.941623      0.326798   -0.847375    0.174174
+  1.20972    -0.745284    -1.57119       1.13692    -2.35792    -0.191441
+ -0.36017    -0.400969     0.398202     -0.194262   -0.785111   -0.764176
+  0.243962    0.102421    -1.74552       0.0195486  -0.475647    1.23968
+ -0.586099   -0.481138    -0.396337  ... 2.16696     0.145727    0.348194
+  0.810478   -1.41851      0.661778     -0.110213    0.397295    0.908824
+ -0.173821   -0.0334777    0.593349      1.00495    -1.38393    -1.6448
+ -1.13339    -0.911688     1.52026      -0.293288    0.612828    0.45864
+  0.493715   -2.1743      -1.14563       1.00688    -1.27257    -0.0470864
+  1.03548     1.01407     -0.586865  ...-1.33328     0.683025    0.215578
+ -0.208806    0.89081      1.14522       1.05247     0.55675    -0.0393328
+ -0.730545   -0.51702      0.642981      0.429845   -0.869449    0.75665
+    .                                .
+    .                                .
+    .                                .
+ -0.421939   -0.66485     -1.33336      -1.06668     0.0644415   0.0635774
+ -1.18934    -0.465795     0.461657      0.247114   -1.71652    -1.9573
+ -0.129762    0.434988     0.23351   ...-0.875235   -0.963982   -0.247793
+  1.2493      0.646449     0.236439     -0.861302   -0.764389    0.858528
+ -0.516579    0.0443446   -1.08403      -1.23918    -1.24305    -0.386032
+ -0.916162   -0.0758758   -0.421691      1.52287     0.527025    1.24463
+ -0.684109   -0.107738    -0.461977     -0.110118    1.00922     0.489418
+ -1.11484    -0.38536     -0.631     ... 1.24931    -0.290083    1.79908
+ -0.0738447   1.76986      1.21057       0.575938   -0.275458    0.324595
+  0.0713201   0.190427    -1.85452       1.33801    -0.0978082   0.34016
+  0.238514    1.22612      0.177986     -1.08624     1.82018    -0.47512
+  0.249298    0.00947162  -1.33509      -0.728613   -0.992987    0.0453849
+  
+\end{verbatim}
+
+\subsection{Concatenation or Adding Columns and Rows to Matrices}
+
+Another way to build a matrix is by concatenating columns or rows. We illustrate that now.\\
+
+Suppose that $v_1, \ldots, v_4$ are row vectors (what Julia calls a $1 \times n$ matrix). Then we can use them as the rows of a matrix, as in 
+$$ M = \begin{bmatrix}
+v_1 \\
+v_2 \\
+v_3\\
+v_4    
+\end{bmatrix}
+$$
+
+Similarly, suppose that $v_1, \ldots, v_4$ are column vectors (what Julia calls a vector). Then we can use them as the columns of a matrix, as in 
+$$ M = \begin{bmatrix}
+v_1 & v_2 & v_3 & v_4    
+\end{bmatrix}
+$$
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+vRow1 = [1 2 3]
+vRow2 = [4 5 6]
+vRow3 = [7 8 9]
+vRow4 = [10 11 12]
+#
+# We will concatenate the row vectors to form a 4 x 3 matrix
+#
+M = [vRow1; vRow2; vRow3; vRow4] # separated by semicolons
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4×3 Matrix{Int64}:
+  1   2   3
+  4   5   6
+  7   8   9
+ 10  11  12
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+vCol1 = [1, 2, 3]
+vCol2 = [4, 5, 6]
+vCol3 = [7, 8, 9]
+vCol4 = [10, 11, 12]
+#
+# We will concatenate the column vectors to form a 3 x 4 matrix
+#
+M = [vCol1 vCol2 vCol3 vCol4]  # separated by spaces
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×4 Matrix{Int64}:
+ 1  4  7  10
+ 2  5  8  11
+ 3  6  9  12
+\end{verbatim}
+
+We can even build matrices from other matrices, as long as they are \textbf{size compatible}. We illustrate. Suppose that $A_{11}$ is $n_1 \times m_1$ and $A_{12}$ is $n_1 \times m_2$, where both $A_{11}$ and $A_{12}$ have the same number of rows. Then we can form 
+$$ M = \begin{bmatrix}
+A_{11} & A_{12}   
+\end{bmatrix}.
+$$
+$M$ now has $m_1 + m_2$ columns. Hence, if $B$ is $n_2 \times (m_1 + m_2)$, then it has the same number of columns as $M$ and thus we can add $B$ to $M$ as additional rows, like this,
+$$ N = \begin{bmatrix}
+M \\ B 
+\end{bmatrix} = \left[ \begin{array}{c} A_{11} ~~~~ A_{12} \\ B  \end{array} \right].
+$$
+we illustrate this now.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A11 = [1 2; 3 4]
+A12 = [5; 6]
+M = [A11 A12]
+display(M)
+
+B = [7 8 9; 10 11 12]
+display(B)
+
+N = [M;B] # Build the matrix piece by piece
+display(N) 
+
+N2 = [A11 A12; B] # Build the matrix all at once. Both are fine.
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×3 Matrix{Int64}:
+ 1  2  5
+ 3  4  6
+ 
+2×3 Matrix{Int64}:
+  7   8   9
+ 10  11  12
+ 
+4×3 Matrix{Int64}:
+  1   2   5
+  3   4   6
+  7   8   9
+ 10  11  12
+ 
+4×3 Matrix{Int64}:
+  1   2   5
+  3   4   6
+  7   8   9
+ 10  11  12
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# With practice, you do this
+A11 = [1 2; 3 4]
+A12 = [5; 6]
+B = [7 8 9; 10 11 12]
+
+C = [A11 A12; B] 
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×3 Matrix{Int64}:
+ 1  2  5
+ 3  4  6
+ 
+1×3 Matrix{Int64}:
+ 7  8  9
+ 
+3×3 Matrix{Int64}:
+ 1  2  5
+ 3  4  6
+ 7  8  9
+\end{verbatim}
+
+If $A_{11}$, $A_{12}$, $A_{21}$, and $A_{22}$ are size compatible matrices, we can do this
+$M = \begin{bmatrix}
+    A_{11} & A_{12} \\ A_{21} & A_{22}
+\end{bmatrix}.$
+
+What do the sizes have to be?  
+\begin{itemize}
+    \item $A_{11}$ and $A_{12}$ must have the same number of rows, so that we can form $\left[A_{11} ~~~ A_{12} \right]$.
+    \item $A_{21}$ and $A_{22}$ must have the same number of rows, which can be different from $A_{11}$ and $A_{12}$. This allows the formation of $\left[ A_{21} ~~~ A_{22} \right]$.
+    \item $\left[A_{11} ~~~ A_{12} \right]$ and $\left[ A_{21} ~~~ A_{22} \right]$ must have the same number of columns. 
+    \item In other words, if $A_{ij}$ is $n_{ij} \times m_{ij}$, then we need
+    \begin{itemize}
+        \item[*] $n_{11} = n_{12}$ (rows match)
+        \item[*] $n_{21} = n_{22}$ (rows match)
+        \item[*] $m_{11} +m_{12} = m_{21} +m_{22}$ (column sums match)
+    \end{itemize}
+\end{itemize}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A11 = [1 2; 3 4]
+A12 = [5; 6]
+A21 = [7;8]
+A22 = [9 10; 11 12]
+
+M = [A11 A12; A21 A22] 
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4×3 Matrix{Int64}:
+ 1   2   5
+ 3   4   6
+ 7   9  10
+ 8  11  12
+\end{verbatim}
+
+
+\section{Indexing or Slicing Vectors}
+
+\begin{rem}
+\textcolor{red}{\bf Julia uses **1-based indexing** which means that the index starts at 1 and not 0.} Be aware that 0-based indexing is used in some other programming languages, such as C++. If you are familiar with MATLAB, it uses 1-based indexing.
+\end{rem}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Run me to define some vectors and matrices
+@show row_vec = [1 3 5 7 9] # spaces make me a row vector
+almost_zero_vec=[0; 0; -pi; 0; 0; 0; 0] # the semicolons (commas also work) 
+                                    # make me a column vector 
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+row_vec = [1 3 5 7 9] = [1 3 5 7 9]
+
+7-element Vector{Float64}:
+  0.0
+  0.0
+ -3.141592653589793
+  0.0
+  0.0
+  0.0
+  0.0
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select the 1st entry from row_vector
+num = row_vec[1]
+#= Can you tell that the type of num is Int64? 
+If you are unsure, uncomment and run the next command
+=#
+# typeof(num)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select the non-zero number from almost_zero_vec
+num = almost_zero_vec[3]
+# Note: because a vector has only one dimension, 
+# only one index is needed and it corresponds to 
+# the location where the number is stored
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+-3.141592653589793
+\end{verbatim}
+
+\textcolor{red}{\bf You can select multiple entries at one time.}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select the first, second, and fourth entries of the 
+# vector row_vec and return them as a row vector
+#
+ind = [1 2 4] # note the use of spaces instead of commas 
+#             or semicolons so as to return a row vector.
+result = row_vec[ind]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1×3 Matrix{Int64}:
+ 1  3  7
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# You can also do it like this, but it's kind of ugly
+result = row_vec[[1 2 4]]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1×3 Matrix{Int64}:
+ 1  3  7
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select the first, second, and fourth entries of the 
+# vector row_vec and return then as a column vector
+#
+ind = [1, 2, 4] # note the use of commas (semicolons also work) 
+#                 so as to return a column vector.
+result = row_vec[ind]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3-element Vector{Int64}:
+ 1
+ 3
+ 7
+\end{verbatim}
+
+\section{Indexing or Slicing Matrices}
+
+\begin{rem}
+We recall once again that Julia uses \textbf{**1-based indexing**} which means that the index starts at 1 and not 0. Be aware that 0-based indexing is used in some other programming languages, such as C++. If you are familiar with MATLAB, it uses 1-based indexing.
+\end{rem}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Run me to define a matrix with random numbers
+#
+using Random # Using an external package called Random 
+Random.seed!(1234) # Set the seed so that each of you gets the same results. 
+rand_matrix = rand(4, 6)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4×6 Matrix{Float64}:
+ 0.590845  0.794026  0.246837   0.066423  0.276021   0.950498
+ 0.766797  0.854147  0.579672   0.956753  0.651664   0.96467
+ 0.566237  0.200586  0.648882   0.646691  0.0566425  0.945775
+ 0.460085  0.298614  0.0109059  0.112486  0.842714   0.789904
+\end{verbatim}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select the entry in the 2nd row and 3rd column of rand_matrix
+#
+myNum = rand_matrix[2, 3]
+#
+# Note: 2 is the index for the row, and 3 is the index for the column
+#
+# Can you tell that the type of myNum is Float64? 
+# If you are unsure, uncomment and run the next command
+# typeof(myNum)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+0.5796722333690416
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select the entire 4th column of rand_matrix
+#
+myVect = rand_matrix[:, 4]
+#
+# Note: when we want to select the whole column, 
+# we use `:` as the index for row, and vice versa. 
+# The symbol ":" stands for "all entries" 
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4-element Vector{Float64}:
+ 0.06642303695533736
+ 0.9567533636029237
+ 0.646690981531646
+ 0.11248587118714015
+\end{verbatim}
+
+\begin{rem}
+Selecting a row of a matrix is trickier than selecting a column. Pay attention here. \textcolor{red}{\bf This is very different than MATLAB.}
+\end{rem}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select the 2nd row of rand_matrix
+#
+myVect = rand_matrix[2:2, :]  # note the use of "2:2" instead of simply "2"
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+1×6 Matrix{Float64}:
+ 0.766797  0.854147  0.579672  0.956753  0.651664  0.96467
+\end{verbatim}
+
+\begin{rem}
+\textcolor{red}{\bf Pay attention here. This is very different than MATLAB.} Julia hates row vectors so much that it calls a row vector a $1 \times n$ \texttt{Matrix}. Every chance it gets, Julia creates a column vector and then calls it an $n$-element \texttt{Vector}. You need to be aware of this peculiarity of the language. Forgetting it will lead to frustration and heartbreak! 
+\end{rem}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# If you only place a "2" instead of "2:2" you get a column vector
+#
+myVect = rand_matrix[2, :]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6-element Vector{Float64}:
+ 0.7667970365022592
+ 0.8541465903790502
+ 0.5796722333690416
+ 0.9567533636029237
+ 0.6516642063795697
+ 0.9646697763820897
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# What if you use the m:m trick on a column?
+#
+myVect = rand_matrix[:, 4:4]
+#
+# You get a 4 x 1 Matrix. While this is not a Vector in Julia, 
+# for most uses, it is perfectly fine.
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4×1 Matrix{Float64}:
+ 0.06642303695533736
+ 0.9567533636029237
+ 0.646690981531646
+ 0.11248587118714015
+\end{verbatim}
+
+\section{More Advanced Remarks on Indexing}
+
+We'll use the matrix \texttt{rand\_matrix} to show how to select ``sub-matrices'' from it.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Run me
+rand_matrix
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4×6 Matrix{Float64}:
+ 0.590845  0.794026  0.246837   0.066423  0.276021   0.950498
+ 0.766797  0.854147  0.579672   0.956753  0.651664   0.96467
+ 0.566237  0.200586  0.648882   0.646691  0.0566425  0.945775
+ 0.460085  0.298614  0.0109059  0.112486  0.842714   0.789904
+\end{verbatim}
+
+\vspace*{.2cm}
+
+\textcolor{blue}{\bf We will now select out the rows in red,}
+\begin{equation}
+\left[
+\begin{array}{cccccc}
+0.5908 & 0.7940 & 0.2468 & 0.0664 & 0.2760 & 0.9505 \\
+\RED 0.7668 & \RED 0.8541 &  \RED 0.5797 & \RED 0.9568 & \RED 0.6517 & \RED 0.9647 \\
+0.5662 & 0.2006 &  0.6489 &  0.6467 & 0.0566 & 0.9458 \\
+\RED 0.4601 & \RED 0.2986 & \RED 0.0109 & \RED 0.1125 & \RED 0.8427 & \RED 0.7899 \\
+\end{array}
+\right]
+\end{equation}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+indRow = [2, 4]             # Note that we wanted all the columns, 
+mySlice=rand_matrix[indRow,:]  # so we use the colon : to do that
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2x6 Matrix{Float64}:
+ 0.766797  0.854147  0.579672   0.956753  0.651664  0.96467
+ 0.460085  0.298614  0.0109059  0.112486  0.842714  0.789904
+\end{verbatim}
+
+\textcolor{blue}{\bf We will now select out the columns in red,}
+\begin{equation}
+\left[
+\begin{array}{cccccc}
+0.5908 & 0.7940 & \RED 0.2468 & 0.0664 & \RED 0.2760 & \RED 0.9505 \\
+0.7668 & 0.8541 &  \RED 0.5797 &  0.9568 & \RED 0.6517 & \RED 0.9647 \\
+0.5662 & 0.2006 &  \RED 0.6489 &  0.6467 & \RED 0.0566 & \RED 0.9458 \\
+0.4601 & 0.2986 & \RED 0.0109 & 0.1125 & \RED 0.8427 & \RED 0.7899 \\
+\end{array}
+\right]
+\end{equation}
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+indCol = [3, 5, 6]          # Note that we wanted all the rows, 
+mySlice=rand_matrix[:,indCol]  # so we use the colon : to do that
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4x3 Matrix{Float64}:
+ 0.246837   0.276021   0.950498
+ 0.579672   0.651664   0.96467
+ 0.648882   0.0566425  0.945775
+ 0.0109059  0.842714   0.789904
+\end{verbatim}
+
+
+\textcolor{blue}{\bf We will now select out the entries in red,}
+\begin{equation}
+\left[
+\begin{array}{cccccc}
+0.5908 & 0.7940 & 0.2468 & 0.0664 & 0.2760 & 0.9505 \\
+0.7668 & 0.8541 & \RED 0.5797 & \RED 0.9568 & 0.6517 & 0.9647 \\
+0.5662 & 0.2006 & \RED 0.6489 & \RED 0.6467 & 0.0566 & 0.9458 \\
+0.4601 & 0.2986 & 0.0109 & 0.1125 & 0.8427 & 0.7899 \\
+\end{array}
+\right]
+\end{equation}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select rows 2 and 3 of columns 3 and 4
+indRow = [2, 3] # Yes, commas are used. Try it without the commas here
+indCol = [3, 4]
+mySlice=rand_matrix[indRow,indCol]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×2 Matrix{Float64}:
+ 0.579672  0.956753
+ 0.648882  0.646691
+\end{verbatim}
+
+\textcolor{blue}{\bf We will next select out the entries in red,}
+\begin{equation}
+\left[
+\begin{array}{cccccc}
+\RED 0.5908 & 0.7940 & 0.2468 & 0.0664 & 0.2760 & \RED 0.9505 \\
+\RED 0.7668 & 0.8541 &  0.5797 &  0.9568 & 0.6517 &\RED  0.9647 \\
+0.5662 & 0.2006 &  0.6489 &  0.6467 & 0.0566 & 0.9458 \\
+\RED 0.4601 & 0.2986 & 0.0109 & 0.1125 & 0.8427 & \RED 0.7899 \\
+\end{array}
+\right]
+\end{equation}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select rows 1,2, and 4 of columns 1 and 6
+indRow = [1, 2, 4] # Yes, commas are used. Try it without the commas here
+indCol = [1, 6]
+mySlice=rand_matrix[indRow,indCol]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×2 Matrix{Float64}:
+ 0.590845  0.950498
+ 0.766797  0.96467
+ 0.460085  0.789904
+\end{verbatim}
+
+\textcolor{blue}{\bf We will select out the entries in red,}
+\begin{equation}
+\left[
+\begin{array}{cccccc}
+0.5908 & 0.7940 & 0.2468 & 0.0664 & 0.2760 & 0.9505 \\
+0.7668 & 0.8541 & \RED 0.5797 & \RED 0.9568 & \RED0.6517 & \RED0.9647 \\
+0.5662 & 0.2006 & \RED 0.6489 & \RED 0.6467 & \RED0.0566 & \RED0.9458 \\
+0.4601 & 0.2986 & 0.0109 & 0.1125 & 0.8427 & 0.7899 \\
+\end{array}
+\right]
+\end{equation}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select from column 3 to the end of rows 2 and 3
+indRow = [2, 3] # Yes, commas are used. Try it without the commas here
+mySlice=rand_matrix[indRow,3:end] # note 3:end is the same as 3:6
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×4 Matrix{Float64}:
+ 0.579672  0.956753  0.651664   0.96467
+ 0.648882  0.646691  0.0566425  0.945775
+\end{verbatim}
+
+\textcolor{blue}{\bf Here is another way to do the same thing,}
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Select from column 3 to the end of rows 2 and 3
+indRow = [2, 3] # Yes, commas are used. Try it without the commas here
+indCol = collect(3:6) # look up the command ``collect''
+@show indCol
+mySlice=rand_matrix[indRow,indCol]] 
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+indCol = [3, 4, 5, 6]
+
+2×4 Matrix{Float64}:
+ 0.579672  0.956753  0.651664   0.96467
+ 0.648882  0.646691  0.0566425  0.945775
+\end{verbatim}
+
+\begin{rem}
+To get help on a function in Julia, use a question mark, followed by a space, followed by the name of the function. We illustrate here for the function \texttt{collect}
+\end{rem}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+? collect
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+search: collect
+
+collect(element_type, collection)
+Return an Array with the given element type of all items in a collection or iterable. 
+The result has the same shape and number of dimensions as collection.
+
+Examples
+julia> collect(Float64, 1:2:5)
+3-element Vector{Float64}:
+ 1.0
+ 3.0
+ 5.0
+collect(collection)
+Return an Array of all items in a collection or iterator. For dictionaries, returns
+Pair{KeyType, ValType}. If the argument is array-like or is an iterator with the
+[HasShape](@ref IteratorSize) trait, the result will have the same shape and number of
+dimensions as the argument.
+
+Examples
+julia> collect(1:2:13)
+7-element Vector{Int64}:
+  1
+  3
+  5
+  7
+  9
+ 11
+ 13
+\end{verbatim}
+\begin{rem}
+At least in the ROB 101 version of Julia, any call to a help function must be the only thing in the cell. Even inserting a comment breaks the help command.
+\end{rem}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# see what happens when you lead with a comment
+? collect
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+syntax: invalid identifier name "?"
+
+Stacktrace:
+ [1] top-level scope
+   @ In[11]:2
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String,
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+
+
+\section{Advanced Methods for Creating Vectors and Matrices}
+\label{sec:Chap2:AdvancedMethodsCreatingMatrices}
+
+We'll illustrate the commands \texttt{Vector\{Float64\}(undef, n)} and  \texttt{Matrix\{Float64\}(undef, n, m)} for creating vectors and matrices. They allow you to define a vector or matrix of a specified size without specifying its entries. We'll also illustrate the \texttt{copy} command for creating a copy of a matrix and how to make an identity matrix.
+\begin{itemize}
+    \item \texttt{Vector\{Float64\}(undef, n)}
+    \item \texttt{Matrix\{Float64\}(undef, n, m)}
+    \item where \texttt{undef} is a Julia keyword to create a value that is ``undefined'', and
+    \item $n$ defines the number of rows and $m$ the number of columns. 
+    \item \texttt{B=copy(A)} 
+    \item How to create an identify matrix \texttt{Id = zeros(n,n) + I}.
+\end{itemize}
+
+Notice that when Julia creates a vector or matrix using the \texttt{Vector\{Float64\}(undef, n)} and  \texttt{Matrix\{Float64\}(undef, n, m)}  commands, it fills its entries with tiny numbers. How tiny? Well, the age of the universe in seconds is approximately 4.2$\times 10^{16}$. Hence, each second is approximately $2.3\times 10^{-17}$-th of the age of the universe. Let's say a typical ant that shows up in your home is half a centimeter long. Then that ant is $1.25\times 10^{-10}$ of the circumference of the earth (which is approximately 40,000 km). Julia is using numbers with $10^{-310}.$ I hope these comparisons were both helpful and interesting! \\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+Vector{Float64}(undef, 5)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+5-element Vector{Float64}:
+ 0.0
+ 5.0e-324
+ 6.9094653095626e-310
+ 1.0e-323
+ 5.0e-324
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+Matrix{Float64}(undef, 3, 4)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×4 Matrix{Float64}:
+ 6.90947e-310  6.90947e-310  6.90947e-310  6.90947e-310
+ 6.90947e-310  6.90947e-310  6.90947e-310  6.9094e-310
+ 6.90947e-310  6.90947e-310  6.90947e-310  6.90947e-310
+\end{verbatim}
+
+\textbf{The Copy command is more important than you might think.} The command \texttt{C=A} creates the matrix \texttt{C} and sets all of its entries equal to those of \texttt{A}. So far so good. It also links \texttt{C} to the matrix \texttt{A} so that any changes made to \texttt{C} are also made in \texttt{A} and vice versa. The command \texttt{B=copy(A)} creates an \textbf{independent} copy of $A$. Changes made in \texttt{B} do not show up in \texttt{A} and vice versa. Study the following examples and create a few of your own:\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=[1.9 2.0; 3.0 4.0]
+C=A
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×2 Matrix{Float64}:
+ 1.0  2.0
+ 3.0  4.0
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+C[1,2]=pi
+C
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×2 Matrix{Float64}:
+ 1.0  3.14159
+ 3.0  4.0
+\end{verbatim}
+
+Now, look at the matrix $A$. \\
+\begin{lstlisting}[language=Julia,style=mystyle]
+A
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×2 Matrix{Float64}:
+ 1.0  3.14159
+ 3.0  4.0
+\end{verbatim}
+
+\textbf{Next, we illustrate the copy command.} We make a change in \texttt{B} and show that it does not show up in \texttt{A}.\\
+\begin{lstlisting}[language=Julia,style=mystyle]
+# Redefine A
+A=[1.0 2.0; 3.0 4.0]
+@show A
+# Use the copy command
+B=copy(A)
+@show B
+println("Now we change B[1,1]")
+B[1,1]=sqrt(2)
+@show B
+println("and show there is no change in A")
+A
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+A = [1.0 2.0; 3.0 4.0]
+B = [1.0 2.0; 3.0 4.0]
+Now we change B[1,1]
+B = [1.4142135623730951 2.0; 3.0 4.0]
+and show there is no change in A
+
+2×2 Matrix{Float64}:
+ 1.0  2.0
+ 3.0  4.0
+\end{verbatim}
+
+\textbf{Identity matrix:} There is a special square matrix denoted $I$, or sometimes $I_n$ to emphasize that it is an $n \times n $ matrix, which has ones on its diagonal and zeros everywhere else,
+$$I_1=[1],~I_2=\begin{bmatrix} 1 & 0\\0& 1 \end{bmatrix},~I_3= \begin{bmatrix} 1 & 0 & 0\\0& 1 & 0\\ 0 & 0 & 1 \end{bmatrix}, ~I_4=\begin{bmatrix} 1 & 0 & 0 & 0\\0& 1 & 0 & 0\\ 0 & 0 & 1 & 0 \\ 0 & 0& 0& 1\end{bmatrix}, ~\text{etc.} $$ 
+While MATLAB has the command \texttt{eye(n)} to create an identity matrix, Julia does not. Here is how you do it.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+# how to make an identity matrix in Julia
+using LinearAlgebra
+n=4
+Id = zeros(n,n) + I
+# I is a special operator that when added to a square zero martrix 
+# produces an identity matrix of the appropriate size
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+4×4 Matrix{Float64}:
+ 1.0  0.0  0.0  0.0
+ 0.0  1.0  0.0  0.0
+ 0.0  0.0  1.0  0.0
+ 0.0  0.0  0.0  1.0
+\end{verbatim}
+
+The operator \texttt{I} is part of the \texttt{LinearAlgebra} package. If you have not already called \texttt{using LinearAlgebra}, you will not be able to use the identity operator \texttt{I}. \\
+
+Fortunately, you cannot overwrite the identity operator \texttt{I} with a fixed identity matrix. That is why we used \texttt{Id = zeros(n,n) + I} in the above cell.\\
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+I = zeros(n,n) + I
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+cannot assign a value to variable LinearAlgebra.I from module Main
+
+Stacktrace:
+ [1] top-level scope
+   @ In[15]:1
+ [2] eval
+   @ ./boot.jl:360 [inlined]
+ [3] include_string(mapexpr::typeof(REPL.softscope), mod::Module, 
+ code::String,
+ filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+\section{Length of a Vector and Size of a Matrix}
+
+If you want to know the \textbf{total number of elements} in any array, then use the \texttt{length} command as illustrated in the following examples.
+
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+using Random # Using an external pacakge called Random 
+Random.seed!(1234) # Set the seed
+V=randn(6) # generate a vector
+display(V)
+@show b=length(V);
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+6-element Vector{Float64}:
+  0.8673472019512456
+ -0.9017438158568171
+ -0.4944787535042339
+ -0.9029142938652416
+  0.8644013132535154
+  2.2118774995743475
+  
+b = length(V) = 6
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=rand(3,4)
+display(A)
+@show length(A);
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×4 Matrix{Float64}:
+ 0.200586  0.579672   0.066423  0.112486
+ 0.298614  0.648882   0.956753  0.276021
+ 0.246837  0.0109059  0.646691  0.651664
+ 
+length(A) = 12
+\end{verbatim}
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+B=rand(2,2,2)
+display(B)
+@show length(B);
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+2×2×2 Array{Float64, 3}:
+[:, :, 1] =
+ 0.0566425  0.950498
+ 0.842714   0.96467
+
+[:, :, 2] =
+ 0.945775  0.82116
+ 0.789904  0.0341601
+length(B) = 8
+\end{verbatim}
+
+\textbf{Important:} The \texttt{length} command is providing the total number of elements in any array! If you want the number of rows or columns, you must use the \texttt{size command}.
+
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=rand(3,4)
+display(A)
+@show nRows, nCols = size(A);
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×4 Matrix{Float64}:
+ 0.449182   0.698356  0.372575  0.283401
+ 0.875096   0.365109  0.150508  0.404953
+ 0.0462887  0.302478  0.147329  0.499531
+ 
+(nRows, nCols) = size(A) = (3, 4)
+\end{verbatim}
+
+You can also obtain only the number of rows or just the number of columns.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=rand(3,4)
+display(A)
+@show nRows = size(A,1);
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×4 Matrix{Float64}:
+ 0.658815  0.59552   0.61816   0.0368842
+ 0.515627  0.292462  0.66426   0.643704
+ 0.260715  0.28858   0.753508  0.
+ 
+nRows = size(A, 1) = 3  # note the 1
+\end{verbatim}
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A=rand(3,4)
+display(A)
+@show nCols = size(A,2);  # note the 2
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+3×4 Matrix{Float64}:
+ 0.525057  0.082207  0.218177  0.932984
+ 0.61201   0.199058  0.362036  0.827263
+ 0.432577  0.576082  0.204728  0.0992992
+ 
+nCols = size(A, 2) = 4
+\end{verbatim}
+
+\vspace*{.2cm}
+
+\begin{tcolorbox}[title = {\bf \large Length vs Size}]
+
+\begin{itemize}
+    \item \texttt{length(X)} is the total number of elements in the array $X$. If $X$ is a vector, then it is the usual length. If $X$ is a matrix, then length returns the product of the number of rows and the number of columns.
+    
+    \item \texttt{nRows, nCols = size(A)} is best applied to matrices. It provides the number of rows and the number of columns. You can also use it as follows to return just the number of rows or just the number of columns,
+    
+    \item \texttt{nRows = size(A,1)}
+    
+  \item \texttt{nCols = size(A,2)} 
+  
+  \item \textcolor{red}{\bf Applying the \texttt{size} command to vectors is just asking for trouble. Please avoid doing this.}
+
+  \item \textcolor{red}{\bf Applying the \texttt{length} command to matrices is normally a mistake.} Be very careful when doing this. 
+\end{itemize}
+
+
+\end{tcolorbox}
+
+\section{Debugging}
+
+\vspace*{.2cm}
+
+\begin{tcolorbox}[title={\large \bf What is Debugging All About?}]
+
+    \begin{itemize}
+        \item Taken From the Pro Tip page at Georgia Tech for a graduate-level course: \url{https://cse6040.gatech.edu/fa22/pro_tips.html}
+
+        \item Debugging is an iterative process where you must trace the undesired behavior back to the root cause. Sometimes it's simple; other times it can be frustratingly complex.
+
+        \item Identify what is wrong. This needs to be as precise as possible. If you don't understand the error in the traceback - Google it!. Check the syntax, parameters, and inputs of any function calls.
+
+        \item Identify where the wrong thing got set. This will usually be an assignment or a function call.
+
+        \item Rinse and repeat until you have found and corrected the root cause.
+    \end{itemize}
+    \end{tcolorbox}
+
+At this point, in the course, we'll focus on showing some common errors so you get used to them and how Julia responds. Later, we can be more strategic in our thinking.\\
+
+\subsection{Errors with the \texttt{size} command}
+We use the \texttt{size} command on a $ 5 \times 1$ vector. The \texttt{size} command only works on matrices. You should use the \texttt{length} command here. The error message does tell you the error is on line \#2 of your code.
+\begin{lstlisting}[language=Julia,style=mystyle]
+v=[1; 2; 3; 4; 5]
+nRows,nCols = size(v)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+BoundsError: attempt to access Tuple{Int64} at index [2]
+
+Stacktrace:
+ [1] indexed_iterate(t::Tuple{Int64}, i::Int64, state::Int64)
+   @ Base ./tuple.jl:86
+ [2] top-level scope
+   @ In[112]:2
+ [3] eval
+   @ ./boot.jl:360 [inlined]
+ [4] include_string(mapexpr::typeof(REPL.softscope), mod::Module, code::String, filename::String)
+   @ Base ./loading.jl:1094
+
+\end{verbatim}
+
+The size command does its best to do what you ask, so it returns something for the number of rows and an empty space where the number of columns is supposed to go. It does not throw an error if you do not attempt to assign a name to something that does not exist (here, the number of columns does not exist).
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+v=[1; 2; 3; 4; 5]
+size(v)
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(5,)
+\end{verbatim}
+
+We use the \texttt{size} command on a $ 1 \times 5$ ``vector''. The \texttt{size} command works this time because Julia treats row vectors as matrices. You could also use the \texttt{length} command here. 
+\begin{lstlisting}[language=Julia,style=mystyle]
+v=[1 2 3 4 5]
+@show nRows,nCols = size(v)
+@show length(v);
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+(nRows, nCols) = size(v) = (1, 5)
+length(v) = 5
+\end{verbatim}
+
+\subsection{Bounds errors due to improper indexing}
+
+We next try to index into a non-existent entry of a matrix.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+A = [1 2 3 4; 5 6 7 8.0]
+k=5;
+\end{lstlisting}
+\textbf{Output} 
+Nothing because we used a semicolon to suppress the output!
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+a = A[2,k]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+BoundsError: attempt to access 2x4 Matrix{Float64} at index [2, 5]
+
+Stacktrace:
+ [1] getindex(::Matrix{Float64}, ::Int64, ::Int64)
+   @ Base ./array.jl:802
+ [2] top-level scope
+   @ In[119]:2
+ [3] eval
+   @ ./boot.jl:360 [inlined]
+ [4] include_string(mapexpr::typeof(REPL.softscope), mod::Module, 
+ code::String, filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+The best thing to do when you see this is to check the size of the matrix and the value of the index. Yes, here we see easily that $A$ is $2 \times 4$ and $k=5$, but in a more complicated situation, you will make mistakes like this that are much less obvious. \\
+
+By using the \texttt{\@show} command, we obtain enough information to understand our error.
+
+\begin{lstlisting}[language=Julia,style=mystyle]
+@show size(A)
+@show k
+a = A[2,k]
+\end{lstlisting}
+\textbf{Output} 
+\begin{verbatim}
+size(A) = (2, 4)
+k = 5
+BoundsError: attempt to access 2×4 Matrix{Float64} at index [2, 5]
+
+Stacktrace:
+ [1] getindex(::Matrix{Float64}, ::Int64, ::Int64)
+   @ Base ./array.jl:802
+ [2] top-level scope
+   @ In[124]:3
+ [3] eval
+   @ ./boot.jl:360 [inlined]
+ [4] include_string(mapexpr::typeof(REPL.softscope), mod::Module, 
+ code::String, filename::String)
+   @ Base ./loading.jl:1094
+\end{verbatim}
+
+
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+% \begin{lstlisting}[language=Julia,style=mystyle]
+
+% \end{lstlisting}
+% \textbf{Output} 
+% \begin{verbatim}
+
+% \end{verbatim}
+
+
+
+
+

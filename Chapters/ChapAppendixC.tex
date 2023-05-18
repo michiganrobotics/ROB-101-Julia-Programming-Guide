@@ -1,0 +1,36 @@
+
+
+\begin{tcolorbox}[title=\textbf{\Large Command Comparison Side by Side:}]
+
+
+The following document takes you though a nice comparison of MATLAB and Julia, with Python thrown in as a bonus.
+
+\vspace*{.2cm}
+\begin{center}
+\url{https://cheatsheets.quantecon.org/}
+\end{center}
+\vspace*{.2cm}
+
+If you know Matlab, there are numerous places where Julia is just enough different to cause significant frustration. If you read the above document carefully and refer to it regularly, you will be able to pick up Julia quite quickly and with minimal frustration.
+
+
+\end{tcolorbox}
+
+\vspace*{.2cm}
+
+\textbf{\large Here are some key things to note. }\\
+\begin{itemize}
+\item When using Julia in a jupyter notebook, only the result of the last computation in the cell is printed to the workspace. You do NOT need to place semicolons after each calculation.
+\item Julia uses spaces to separate elements in a row vector or a row of a matrix and NOT commas as in MATLAB. Julia uses commas OR semicolons to separate rows in a vector or matrix, and NOT only semicolons as in Matlab; see Appendix~\ref{sec:AppendixA:CreateVectorsMatrices}.  
+    \item Julia uses square brackets when accessing elements of a vector or matrix, whereas Matlab uses parentheses. Julia \texttt{v = A[1,4]}, whereas Matlab \texttt{v = A(1,4)}; see Appendix~\ref{sec:AppendixA:CreateVectorsMatrices}.
+    \item Julia is a bit strange when extracting a row from a matrix. Julia \texttt{v = A[2:2,:]}, whereas Matlab \texttt{v = A(2,:)}. Note the \texttt{2:2}; this is only required when you want the extracted row to remain a row. The Julia command \texttt{v = A[2,:]} will extract the second row of the matrix $A$, but it will be presented to  you as a column vector; see Appendix~\ref{sec:AppendixA:Indexing}.
+    \item Column extraction is the same in Julia and Matlab, barring the change from parentheses to square brackets.
+    \item Julia is heavily \texttt{Typed} and hence a $1 \times n$ (row) vector times an $n \times 1$ (column) vector is a 1-element vector and not a scalar as in Matlab. You have to extract the element from the 1-element vector if you want to use it as a number; see Appendix~\ref{sec:AppendixA:1ElementVectors}.
+    \item \texttt{for\,loops}, \texttt{while\,loops}, and \texttt{if statements} can be done the same way in Julia and Matlab, though Julia has a few extra means of specifying the range of a counter when doing \texttt{for\,loops}; see Appendix~\ref{sec:AppendixA:FlowControl}.
+    \item The syntax for functions in Julia is different from the syntax in Matlab, but not so much that it makes it hard to learn or anything. The main difference is how one specifies the output arguments of a function. Julia uses a \texttt{return} statement while Matlab places them on the first line of the function's specification; see Appendix~\ref{sec:AppendixA:Functions}.
+    \item Julia does not have an equivalent of Matlab's \texttt{eye(n,m)} command; see Appendix~\ref{sec:AppendixA:CreateVectorsMatrices}. 
+    \item The error messages in Matlab are quite useful, in general, and rather easy to understand. The error messages in Julia are currently a mess. Julia 2.0 is supposed to fix the error messages. We are currently at Julia 1.6.1. Oh well! 
+    \item Plotting is relatively easier in Matlab than in Julia. 
+    \item Julia gives you the speed of compiled code. Julia can be as fast as C++. Matlab? Not so much.
+    \item In MATLAB, every package that you have purchased from the MATHWORKS is immediately available to you. Julia tries to avoid being a memory hog. You have to add packages when you need them. In ROB 101, a bunch of packages have already been added, but you have to learn the \texttt{using} command to activate them. See this manual for examples.   
+\end{itemize}

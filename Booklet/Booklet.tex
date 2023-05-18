@@ -1,0 +1,180 @@
+\documentclass[letterpaper]{book}
+\PassOptionsToPackage{usenames,dvipsnames,svgnames,table,xcdraw}{xcolor}
+\PassOptionsToPackage{dvipsnames,svgnames,table,xcdraw}{enumitems}
+
+
+\usepackage{tabularray}
+\usepackage{xcolor}
+
+\input{Defines/definesPackages}
+\input{Defines/definesCommands}
+\input{Defines/definesJuliaCodeCell}
+%\parindent
+
+\makeatletter
+\renewcommand{\frontmatter}{\cleardoublepage\@mainmatterfalse}
+\renewcommand{\mainmatter}{\cleardoublepage\@mainmattertrue}
+\makeatother
+
+% \title{Notes for Computational Linear Algebra\thanks{Inspired by Prof. Chad Jenkins}}
+% \date{}
+% \author{Jessy Grizzle\\ Robotics Institute, University of Michigan, Ann Arbor
+% \and Content contributed by Maani, Tribhi, Miley, Madhav, Kira, and Michael}
+
+%\doublespacing
+
+\title{Mathematics for Robotics}
+\date{}
+\author{Jessy Grizzle\\ Robotics Institute, University of Michigan, Ann Arbor}
+
+
+
+\begin{document}
+%\maketitle
+\newtheorem{thm}{Theorem}
+\numberwithin{thm}{chapter}
+\newtheorem{example}[thm]{Example}
+\newtheorem{nonexample}[thm]{Non-Example}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{claim}[thm]{Claim}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{definition}[thm]{Definition}
+\newtheorem{notation}[thm]{Notation}
+\newtheorem{fact}[thm]{Fact}
+\newtheorem{notvocab}[thm]{Notation and Vocabulary}
+\newtheorem{question}[thm]{Question}
+\newtheorem{recall}[thm]{Recall}
+\newtheorem{exercise}[thm]{Exercise}
+\newtheorem{summary}[thm]{Summary}
+\newcounter{keyfacts}
+\newtheorem{keyfact}[keyfacts]{Key Fact}
+
+\begingroup
+\thispagestyle{empty}
+
+\AddToShipoutPicture*{\put(-38,0)  {\includegraphics[scale=1.04]{CoverRob101LabManual.png}}} % Image background
+\mbox{  }
+
+
+\endgroup
+
+\clearpage
+
+
+\begingroup
+\thispagestyle{empty}
+%\centerline
+% \AddToShipoutPicture*{\put(240,50)  {\includegraphics[scale=0.35]{media_users_user_14_project_222374_images_res_cassie_image.png}}} % Image background
+\AddToShipoutPicture*{\put(40,450)  {\includegraphics[scale=0.35]{WorkTogether.png}}} % Image background
+
+
+~\vfill
+\thispagestyle{empty}
+\noindent Cover design by Dan Newman, Head of Communications, Michigan Robotics
+
+\vspace*{2cm}
+\noindent\copyright\space 2022	Jessy Grizzle,  Professor of Robotics, University of Michigan	\\
+\noindent \textsc{Jerry W. and Carol L. Levin Professor of Engineering\\
+Elmer G. Gilbert Distinguished University Professor}\\
+
+%\noindent \textsc{github.com/LaurethTeX/Clustering}\\ % URL
+
+\noindent This manual is based on the Julia lab exercises that were developed in F-21 by Lu Gan, John Pye, and Jessy Grizzle. Over Su-22, Ms. Yining (Maya) Yuan contributed numerous improvements to the exercises and the editing of the manual.
+\\ % License information
+
+\noindent \textit{First release, August 31, 2022. Second Release, January 4, 2023.} % Printing/edition date
+
+
+\endgroup
+
+
+\frontmatter
+\tableofcontents
+\chapter{Preface}
+\input{Chapters/Preface.tex}
+\chapter{Philosophy of the Course}
+\input{Chapters/Philosophy.tex}
+% \chapter{List of Algorithms and Methods or Things You Need Code to Do Well}
+% \input{TexBookletHandouts/ListAlgorithms.tex}
+\mainmatter
+
+
+\setcounter{chapter}{-1}
+\chapter{Julia Lab 0: Introduction to Coding in Julia}
+\label{chap:Lab0}
+\input{Chapters/Chap00.tex}
+
+\chapter{Julia Lab 1: Variable Types, Plotting a Function, and Creating Arrays}
+\label{chap:Lab1}
+\input{Chapters/Chap01.tex}
+
+\chapter{Julia Lab 2: Vectors, Matrices, and Indexing}
+\label{chap:Lab2}
+\input{Chapters/Chap02.tex}
+
+\chapter{Julia Lab 3: For Loops and 1-Element Vectors}
+\label{chap:Lab3}
+\input{Chapters/Chap03.tex}
+
+\chapter{Julia Lab 4: If Statements, Function Creation, and ``Peeling the Onion''}
+\label{chap:Lab4}
+\input{Chapters/Chap04.tex}
+
+\chapter{Julia Lab 5: Linear Independence and LDLT Factorization, a Souped-up Version of LU}
+\label{chap:Lab5}
+\input{Chapters/Chap05.tex}
+
+\chapter{Julia Lab 6: Matrix Null Space and Linear Regression}
+\label{chap:Lab6}
+\input{Chapters/Chap06.tex}
+
+\chapter{Julia Lab 7: Grahm-Schmidt Algorithm, Orthogonal (Basis) Vectors, and Computing the Null Space}
+\label{chap:Lab7}
+\input{Chapters/Chap07.tex}
+
+\chapter{Julia Lab 8: Basis Vectors, Dimension, Coordinates, Eigenvectors and Eigenvalues}
+\label{chap:Lab8}
+\input{Chapters/Chap08.tex}
+
+\chapter{Julia Lab 9: Modeling, Simulating, and Controlling a Mobile Robot}
+\label{chap:Lab9}
+\input{Chapters/Chap09.tex}
+
+\chapter{Julia Lab 10: The Joy of Doing Calculus with Julia!}
+\label{chap:Lab10}
+\input{Chapters/Chap10.tex}
+
+\pagestyle{plain}
+
+\newpage
+
+\appendix
+
+\chapter{Summary of Key Julia Commands}
+\label{App:JuliaCommands}
+\input{Chapters/ChapAppendixA.tex}
+
+\chapter{Building Better Functions Through Structured Returns or Named Tuples}
+\label{App:StructuredReturns}
+\input{Chapters/ChapAppendixB}
+
+\chapter{From MATLAB to Julia}
+\label{App:FromMatlab2Julia}
+\input{Chapters/ChapAppendixC.tex}
+
+\chapter{From C++ to Julia}
+\label{App:FromC2Julia}
+% \usepackage{multirow}
+% \usepackage[table,xcdraw]{xcolor}
+% \usepackage{longtable}
+\input{Chapters/ChapAppendixD.tex}
+
+\chapter{Creating Your Own Local Julia Installation}
+\label{App:MyOwnJulia}
+\input{Chapters/ChapAppendixE.tex}
+
+
+\end{document}
+
